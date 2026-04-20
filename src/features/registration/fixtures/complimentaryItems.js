@@ -1,0 +1,35 @@
+/**
+ * 29 complimentary items — consumed by downstream Complimentary Item tab bolt.
+ * Included here so the masters layer is complete.
+ */
+export const complimentaryItems = [
+  { id: 'ci-01', name: 'Airport Pick-Up & Drop' },
+  { id: 'ci-02', name: 'Airport Drop' },
+  { id: 'ci-03', name: 'Welcome Fruit Basket' },
+  { id: 'ci-04', name: 'Buffet Breakfast/A la Carte' },
+  { id: 'ci-05', name: 'Afternoon High Tea' },
+  { id: 'ci-06', name: '2 Bottle Mineral Water' },
+  { id: 'ci-07', name: '1 Large Bottle Mineral Water' },
+  { id: 'ci-08', name: '2pcs Laundry Daily' },
+  { id: 'ci-09', name: 'Daily Newspaper' },
+  { id: 'ci-10', name: 'VVIP Fruit Basket' },
+  { id: 'ci-11', name: '4 Bottle Mineral Water' },
+  { id: 'ci-12', name: 'Personal Butler' },
+  { id: 'ci-13', name: 'Pool/Gym Access' },
+  { id: 'ci-14', name: 'Wi-Fi' },
+  { id: 'ci-15', name: '24hr Room Service' },
+  { id: 'ci-16', name: 'Airport Pickup' },
+  { id: 'ci-17', name: 'No-Mini Bar' },
+  { id: 'ci-18', name: 'Buffet Lunch' },
+  { id: 'ci-19', name: 'Buffet Dinner' },
+  { id: 'ci-20', name: 'Complimentary Breakfast & Dinner' },
+  { id: 'ci-21', name: 'Tit-Bits' },
+  { id: 'ci-22', name: 'Buffet Breakfast Patenga' },
+  { id: 'ci-23', name: 'Cookies Platter/Fruit Basket' },
+  { id: 'ci-24', name: 'Complimentary Breakfast' },
+  { id: 'ci-25', name: '2 Tea & 2 Coffee' },
+  { id: 'ci-26', name: 'Welcome Drinks' },
+  { id: 'ci-27', name: 'Health Club/Gym' },
+  { id: 'ci-28', name: 'Swimming Pool Access' },
+  { id: 'ci-29', name: 'Tea/Coffee making facilities' },
+]

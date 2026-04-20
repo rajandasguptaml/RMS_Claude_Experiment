@@ -18,8 +18,11 @@ stories:
 created: 2026-04-20T07:25:00Z
 started: 2026-04-20T07:35:00Z
 completed: null
-current_stage: plan
-stages_completed: []
+current_stage: implement
+stages_completed:
+  - name: plan
+    completed: 2026-04-20T07:45:00Z
+    artifact: implementation-plan.md
 
 requires_bolts: []
 enables_bolts:

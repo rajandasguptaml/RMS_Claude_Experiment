@@ -1,0 +1,42 @@
+export const companies = [
+  {
+    id: 'co-01',
+    name: 'Grameenphone Ltd.',
+    contactPerson: 'Arif Ahmed',
+    mobile: '+8801711000001',
+    defaultPaymentMode: 'Company',
+    defaultPayFor: 'Room & Food',
+  },
+  {
+    id: 'co-02',
+    name: 'Robi Axiata',
+    contactPerson: 'Nusrat Jahan',
+    mobile: '+8801711000002',
+    defaultPaymentMode: 'Company',
+    defaultPayFor: 'Room Only',
+  },
+  {
+    id: 'co-03',
+    name: 'Square Pharma',
+    contactPerson: 'Kamal Hossain',
+    mobile: '+8801711000003',
+    defaultPaymentMode: 'Before C/O',
+    defaultPayFor: 'Everything',
+  },
+  {
+    id: 'co-04',
+    name: 'ACI Ltd.',
+    contactPerson: 'Rashida Begum',
+    mobile: '+8801711000004',
+    defaultPaymentMode: 'Company',
+    defaultPayFor: 'Room, Food & Laundry',
+  },
+  {
+    id: 'co-05',
+    name: 'BRAC Bank',
+    contactPerson: 'Tanvir Rahman',
+    mobile: '+8801711000005',
+    defaultPaymentMode: 'Self',
+    defaultPayFor: 'Room Only',
+  },
+]

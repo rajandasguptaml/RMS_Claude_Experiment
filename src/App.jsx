@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { Routes, Route, Link } from 'react-router-dom'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
+import { RegistrationTab } from './features/registration/index.js'
 import './App.css'
 
-function App() {
+function Home() {
   const [count, setCount] = useState(0)
 
   return (
@@ -19,6 +21,9 @@ function App() {
           <h1>Get started</h1>
           <p>
             Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+          </p>
+          <p>
+            <Link to="/dev/registration-tab">Open Registration Tab (dev)</Link>
           </p>
         </div>
         <button
@@ -115,6 +120,15 @@ function App() {
       <div className="ticks"></div>
       <section id="spacer"></section>
     </>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/dev/registration-tab" element={<RegistrationTab />} />
+    </Routes>
   )
 }
 
