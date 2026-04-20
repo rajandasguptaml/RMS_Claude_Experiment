@@ -117,8 +117,7 @@ export function SummaryTable({ onEditRoom }) {
   })
 
   return (
-    <section className="rounded border border-gray-200 p-4 bg-white mt-4 overflow-x-auto">
-      <h2 className="text-lg font-semibold mb-3">Summary</h2>
+    <section className="overflow-x-auto">
       {rows.length === 0 ? (
         <p className="text-sm text-gray-500">No rooms or services added yet.</p>
       ) : (

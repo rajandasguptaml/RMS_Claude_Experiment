@@ -76,7 +76,7 @@ export function HeaderSection() {
   }
 
   return (
-    <section className="rounded border border-gray-200 p-4 bg-white">
+    <section>
       <h2 className="text-lg font-semibold mb-3">Header</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

@@ -137,9 +137,7 @@ export function RoomForm({ editing, onAdd, onUpdate, onCancel }) {
   }
 
   return (
-    <section className="rounded border border-gray-200 p-4 bg-white mt-4">
-      <h2 className="text-lg font-semibold mb-3">Room Detailed Information</h2>
-
+    <section>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
         <div>
           <label className="block">Room Type</label>

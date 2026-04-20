@@ -1,0 +1,552 @@
+/* Zoho-inspired design tokens. Use via CSS custom properties. */
+
+/* Neutralise the Vite starter template's fixed-width #root so the shell can span full viewport. */
+#root {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  border-inline: none;
+  text-align: left;
+  min-height: 100vh;
+  display: block;
+}
+
+body {
+  margin: 0;
+}
+
+:root {
+  --z-color-primary: #1a6dd8;
+  --z-color-primary-50: #eff6ff;
+  --z-color-primary-100: #dbeafe;
+  --z-color-primary-600: #1a6dd8;
+  --z-color-primary-700: #134f9b;
+
+  --z-color-neutral-900: #0f172a;
+  --z-color-neutral-800: #1e293b;
+  --z-color-neutral-700: #2b3544;
+  --z-color-neutral-600: #475569;
+  --z-color-neutral-500: #64748b;
+  --z-color-neutral-400: #94a3b8;
+  --z-color-neutral-300: #cbd5e1;
+  --z-color-neutral-200: #e5e7eb;
+  --z-color-neutral-100: #f1f5f9;
+  --z-color-neutral-50: #f5f7fa;
+  --z-color-neutral-0: #ffffff;
+
+  --z-color-success: #0f9d58;
+  --z-color-success-bg: #e6f7ec;
+  --z-color-warning: #ef6c00;
+  --z-color-warning-bg: #fff4e5;
+  --z-color-danger: #d93025;
+  --z-color-danger-bg: #fde7e4;
+
+  --z-radius-sm: 4px;
+  --z-radius-md: 6px;
+  --z-radius-lg: 10px;
+
+  --z-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --z-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --z-shadow-md:
+    0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --z-shadow-lg:
+    0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+
+  --z-sidebar-width: 240px;
+  --z-topbar-height: 56px;
+
+  --z-font-sans:
+    'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Utility surfaces used across the app */
+.z-app-bg {
+  background: var(--z-color-neutral-50);
+  min-height: 100vh;
+  color: var(--z-color-neutral-700);
+  font-family: var(--z-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.z-card {
+  background: var(--z-color-neutral-0);
+  border: 1px solid var(--z-color-neutral-200);
+  border-radius: var(--z-radius-md);
+  box-shadow: var(--z-shadow-xs);
+}
+
+.z-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--z-color-neutral-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.z-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--z-color-neutral-800);
+  letter-spacing: -0.005em;
+}
+
+.z-card-subtitle {
+  font-size: 12px;
+  color: var(--z-color-neutral-500);
+  margin-top: 2px;
+}
+
+.z-card-body {
+  padding: 18px;
+}
+
+.z-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--z-color-neutral-600);
+  margin-bottom: 6px;
+  letter-spacing: 0;
+}
+
+.z-field-required {
+  color: var(--z-color-danger);
+  margin-left: 3px;
+}
+
+.z-input {
+  width: 100%;
+  border: 1px solid var(--z-color-neutral-300);
+  border-radius: var(--z-radius-md);
+  padding: 8px 11px;
+  font-size: 14px;
+  font-family: var(--z-font-sans);
+  color: var(--z-color-neutral-800);
+  background: var(--z-color-neutral-0);
+  line-height: 1.4;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.z-input:hover {
+  border-color: var(--z-color-neutral-400);
+}
+
+.z-input:focus,
+.z-input:focus-visible {
+  outline: none;
+  border-color: var(--z-color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 109, 216, 0.15);
+}
+
+.z-input[disabled],
+.z-input:disabled {
+  background: var(--z-color-neutral-100);
+  color: var(--z-color-neutral-500);
+  cursor: not-allowed;
+}
+
+.z-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  padding-right: 32px;
+}
+
+.z-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--z-radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.z-btn-primary {
+  background: var(--z-color-primary);
+  color: var(--z-color-neutral-0);
+  border-color: var(--z-color-primary);
+}
+.z-btn-primary:hover {
+  background: var(--z-color-primary-700);
+  border-color: var(--z-color-primary-700);
+}
+.z-btn-primary:disabled {
+  background: var(--z-color-neutral-300);
+  border-color: var(--z-color-neutral-300);
+  color: var(--z-color-neutral-0);
+  cursor: not-allowed;
+}
+
+.z-btn-outline {
+  background: var(--z-color-neutral-0);
+  color: var(--z-color-neutral-700);
+  border-color: var(--z-color-neutral-300);
+}
+.z-btn-outline:hover {
+  border-color: var(--z-color-neutral-400);
+  background: var(--z-color-neutral-50);
+}
+
+.z-btn-ghost {
+  background: transparent;
+  color: var(--z-color-neutral-600);
+}
+.z-btn-ghost:hover {
+  background: var(--z-color-neutral-100);
+}
+
+.z-btn-danger-ghost {
+  background: transparent;
+  color: var(--z-color-danger);
+}
+.z-btn-danger-ghost:hover {
+  background: var(--z-color-danger-bg);
+}
+
+/* Sidebar + topbar */
+.z-app-shell {
+  display: grid;
+  grid-template-columns: var(--z-sidebar-width) 1fr;
+  grid-template-rows: var(--z-topbar-height) 1fr;
+  grid-template-areas:
+    'sidebar topbar'
+    'sidebar content';
+  min-height: 100vh;
+}
+
+.z-sidebar {
+  grid-area: sidebar;
+  background: var(--z-color-neutral-0);
+  border-right: 1px solid var(--z-color-neutral-200);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.z-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--z-color-neutral-800);
+  border-bottom: 1px solid var(--z-color-neutral-200);
+}
+
+.z-sidebar-brand .z-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--z-color-primary), #4b8fe8);
+  color: var(--z-color-neutral-0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.z-sidebar-section {
+  padding: 14px 12px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--z-color-neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.z-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.z-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--z-radius-md);
+  font-size: 13px;
+  color: var(--z-color-neutral-700);
+  text-decoration: none;
+  transition: background-color 100ms ease;
+  position: relative;
+}
+
+.z-sidebar-link:hover {
+  background: var(--z-color-neutral-100);
+}
+
+.z-sidebar-link.active {
+  background: var(--z-color-primary-50);
+  color: var(--z-color-primary-700);
+  font-weight: 500;
+}
+
+.z-sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--z-color-primary);
+}
+
+.z-sidebar-link .z-sidebar-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.z-sidebar-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--z-color-neutral-200);
+  font-size: 12px;
+  color: var(--z-color-neutral-500);
+}
+
+.z-topbar {
+  grid-area: topbar;
+  background: var(--z-color-neutral-0);
+  border-bottom: 1px solid var(--z-color-neutral-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.z-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--z-color-neutral-500);
+  font-size: 13px;
+}
+
+.z-breadcrumb .z-crumb {
+  color: var(--z-color-neutral-500);
+  text-decoration: none;
+}
+
+.z-breadcrumb .z-crumb:hover {
+  color: var(--z-color-neutral-700);
+}
+
+.z-breadcrumb .z-crumb-current {
+  color: var(--z-color-neutral-800);
+  font-weight: 500;
+}
+
+.z-breadcrumb .z-crumb-sep {
+  color: var(--z-color-neutral-400);
+}
+
+.z-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.z-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--z-color-primary-50);
+  color: var(--z-color-primary-700);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.z-content {
+  grid-area: content;
+  padding: 24px;
+  overflow-x: hidden;
+}
+
+.z-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.z-page-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--z-color-neutral-800);
+  letter-spacing: -0.005em;
+}
+
+.z-page-subtitle {
+  font-size: 13px;
+  color: var(--z-color-neutral-500);
+  margin-top: 4px;
+}
+
+.z-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+/* -- Form polish inside Registration tab cards --
+   Scoped upgrade for native inputs/selects/textareas so the existing
+   Tailwind-classed components inherit Zoho styling without a rewrite. */
+.z-card-body section label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--z-color-neutral-600);
+  display: block;
+  margin-bottom: 4px;
+  letter-spacing: 0;
+}
+
+.z-card-body section input:where(
+    [type='text'],
+    [type='number'],
+    [type='email'],
+    [type='tel'],
+    [type='date'],
+    [type='time'],
+    [type='password'],
+    :not([type])
+  ),
+.z-card-body section select,
+.z-card-body section textarea {
+  border: 1px solid var(--z-color-neutral-300);
+  border-radius: var(--z-radius-md);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--z-font-sans);
+  color: var(--z-color-neutral-800);
+  background: var(--z-color-neutral-0);
+  line-height: 1.4;
+  width: 100%;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.z-card-body section input:hover,
+.z-card-body section select:hover,
+.z-card-body section textarea:hover {
+  border-color: var(--z-color-neutral-400);
+}
+
+.z-card-body section input:focus,
+.z-card-body section select:focus,
+.z-card-body section textarea:focus,
+.z-card-body section input:focus-visible,
+.z-card-body section select:focus-visible,
+.z-card-body section textarea:focus-visible {
+  outline: none;
+  border-color: var(--z-color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 109, 216, 0.15);
+}
+
+.z-card-body section input:disabled,
+.z-card-body section select:disabled,
+.z-card-body section textarea:disabled {
+  background: var(--z-color-neutral-100);
+  color: var(--z-color-neutral-500);
+  cursor: not-allowed;
+}
+
+.z-card-body section input[type='checkbox'],
+.z-card-body section input[type='radio'] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--z-color-primary);
+  cursor: pointer;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Native buttons inside sections — lift to match .z-btn styling */
+.z-card-body section button:where(:not([data-testid='comp-tile-checkbox']):not([role='tab'])) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--z-radius-md);
+  border: 1px solid var(--z-color-neutral-300);
+  background: var(--z-color-neutral-0);
+  color: var(--z-color-neutral-700);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.z-card-body section button:hover {
+  border-color: var(--z-color-neutral-400);
+  background: var(--z-color-neutral-50);
+}
+
+.z-card-body section button:disabled {
+  background: var(--z-color-neutral-100);
+  color: var(--z-color-neutral-400);
+  cursor: not-allowed;
+}
+
+/* Data-density polish for the summary table */
+.z-card-body section table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.z-card-body section table thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--z-color-neutral-500);
+  background: var(--z-color-neutral-50);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--z-color-neutral-200);
+}
+
+.z-card-body section table tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--z-color-neutral-100);
+  color: var(--z-color-neutral-700);
+}
+
+.z-card-body section table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.z-card-body section table tbody tr:hover {
+  background: var(--z-color-neutral-50);
+}

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { todayISO, tomorrowISO, diffNights } from '../../../shared/lib/date.js'
+import { initialGuests, createGuestActions } from './guestSlice.js'
 
 /**
  * Wizard draft store. This tab writes to the `registration` slice.
@@ -93,6 +94,7 @@ const initialRegistration = () => ({
   classification: initialClassification(),
   complimentary: initialComplimentary(),
   othersInformation: initialOthersInformation(),
+  guests: initialGuests(),
 })
 
 export const useWizardDraft = create((set, get) => ({
@@ -339,6 +341,9 @@ export const useWizardDraft = create((set, get) => ({
       return { roomLocks: next }
     }),
 
+  // -------- Guest Details (FR-008) --------
+  ...createGuestActions(set, get),
+
   resetDraft: () => set({ registration: initialRegistration(), roomLocks: {} }),
 
   // selector helpers (not hooks — call inside React components via useWizardDraft)
@@ -348,4 +353,5 @@ export const useWizardDraft = create((set, get) => ({
   getClassification: () => get().registration.classification,
   getComplimentary: () => get().registration.complimentary,
   getOthersInformation: () => get().registration.othersInformation,
+  getGuests: () => get().registration.guests,
 }))

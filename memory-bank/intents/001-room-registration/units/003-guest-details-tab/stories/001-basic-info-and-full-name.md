@@ -2,11 +2,11 @@
 id: 001-basic-info-and-full-name
 unit: 003-guest-details-tab
 intent: 001-room-registration
-status: draft
+status: complete
 priority: must
-created: 2026-04-20T07:20:00Z
+created: 2026-04-20T07:20:00.000Z
 assigned_bolt: bolt-guest-details-tab-1
-implemented: false
+implemented: true
 ---
 
 # Story: 001-basic-info-and-full-name

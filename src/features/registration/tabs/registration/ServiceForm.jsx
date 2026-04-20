@@ -88,8 +88,7 @@ export function ServiceForm({ editing, onAdd, onUpdate, onCancel }) {
   }
 
   return (
-    <section className="rounded border border-gray-200 p-4 bg-white mt-4">
-      <h2 className="text-lg font-semibold mb-3">Additional Services</h2>
+    <section>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-sm">
         <div className="md:col-span-2">
           <label className="block">Service Name</label>

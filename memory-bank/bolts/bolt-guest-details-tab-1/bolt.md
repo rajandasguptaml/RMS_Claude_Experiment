@@ -3,7 +3,7 @@ id: bolt-guest-details-tab-1
 unit: 003-guest-details-tab
 intent: 001-room-registration
 type: simple-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 001-basic-info-and-full-name
   - 002-contact-info-and-validation
@@ -13,19 +13,23 @@ stories:
   - 006-guest-search-modal-eleven-filters
   - 007-guest-info-modal-with-history
   - 008-blocked-guest-warning-and-list-crud
-created: 2026-04-20T07:25:00Z
-started: 2026-04-20T09:25:00Z
-completed: null
-current_stage: plan
-stages_completed: []
-
+created: 2026-04-20T07:25:00.000Z
+started: 2026-04-20T09:25:00.000Z
+completed: "2026-04-20T09:58:47Z"
+current_stage: null
+stages_completed:
+  - name: plan
+    completed: 2026-04-20T09:30:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-04-20T09:40:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts:
   - bolt-registration-tab-1
 enables_bolts:
   - bolt-shell-and-check-in-1
 requires_units: []
 blocks: true
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 2

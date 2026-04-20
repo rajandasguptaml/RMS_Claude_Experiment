@@ -1,130 +1,111 @@
-import { useState } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { ArrowRight, FileText, Users, Gift, Info, Printer } from 'lucide-react'
 import {
   RegistrationTab,
   ComplimentaryTab,
   OthersInformationTab,
+  GuestDetailsTab,
 } from './features/registration/index.js'
 import { BlankRegistrationCard } from './features/registration/pages/BlankRegistrationCard.jsx'
 import { RequireAuth } from './shared/auth/RequireAuth.jsx'
-import './App.css'
+import { AppShell } from './shared/layout/AppShell.jsx'
+import { Card } from './shared/ui/Card.jsx'
+
+const QUICK_LINKS = [
+  {
+    to: '/dev/registration-tab',
+    label: 'Registration',
+    desc: 'Create a new room registration',
+    icon: FileText,
+  },
+  {
+    to: '/dev/guest-details-tab',
+    label: 'Guest Details',
+    desc: 'Capture guest profile and documents',
+    icon: Users,
+  },
+  {
+    to: '/dev/complimentary-tab',
+    label: 'Complimentary',
+    desc: 'Select package-included services',
+    icon: Gift,
+  },
+  {
+    to: '/dev/others-information-tab',
+    label: 'Others Information',
+    desc: 'Classification and card guarantee',
+    icon: Info,
+  },
+  {
+    to: '/front-office/room-registration/blank-registration-card',
+    label: 'Blank Card',
+    desc: 'Printable pre-registration form',
+    icon: Printer,
+  },
+]
 
 function Home() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+      <div className="z-page-header">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-          <p>
-            <Link to="/dev/registration-tab">Open Registration Tab (dev)</Link>
-          </p>
+          <h1 className="z-page-title">Front Office</h1>
+          <div className="z-page-subtitle">
+            Room Registration module — pick a workspace to continue.
+          </div>
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: 14,
+        }}
+      >
+        {QUICK_LINKS.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    background: 'var(--z-color-primary-50)',
+                    color: 'var(--z-color-primary-700)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 'none',
+                  }}
                 >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+                  <item.icon size={18} />
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--z-color-neutral-800)',
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--z-color-neutral-500)' }}>
+                    {item.desc}
+                  </div>
+                </div>
+                <ArrowRight size={16} color="var(--z-color-neutral-400)" />
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </>
   )
 }
@@ -132,16 +113,29 @@ function Home() {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/dev/registration-tab" element={<RegistrationTab />} />
-      <Route path="/dev/complimentary-tab" element={<ComplimentaryTab />} />
-      <Route path="/dev/others-information-tab" element={<OthersInformationTab />} />
+      {/* Print-only route — renders outside the app shell for clean printing */}
       <Route
         path="/front-office/room-registration/blank-registration-card"
         element={
           <RequireAuth>
             <BlankRegistrationCard />
           </RequireAuth>
+        }
+      />
+
+      {/* All other routes render inside the Zoho-style app shell */}
+      <Route
+        path="*"
+        element={
+          <AppShell>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dev/registration-tab" element={<RegistrationTab />} />
+              <Route path="/dev/complimentary-tab" element={<ComplimentaryTab />} />
+              <Route path="/dev/others-information-tab" element={<OthersInformationTab />} />
+              <Route path="/dev/guest-details-tab" element={<GuestDetailsTab />} />
+            </Routes>
+          </AppShell>
         }
       />
     </Routes>
