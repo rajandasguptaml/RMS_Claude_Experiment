@@ -3,7 +3,7 @@ id: bolt-registration-tab-1
 unit: 002-registration-tab
 intent: 001-room-registration
 type: simple-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 001-header-section-and-dates
   - 002-reservation-link-pre-population
@@ -15,15 +15,17 @@ stories:
   - 008-supplemental-classification-conditional
   - 009-channel-discovery-group
   - 010-summary-table-crud
-created: 2026-04-20T07:25:00Z
-started: 2026-04-20T07:35:00Z
-completed: null
-current_stage: implement
+created: 2026-04-20T07:25:00.000Z
+started: 2026-04-20T07:35:00.000Z
+completed: "2026-04-20T08:31:15Z"
+current_stage: null
 stages_completed:
   - name: plan
-    completed: 2026-04-20T07:45:00Z
+    completed: 2026-04-20T07:45:00.000Z
     artifact: implementation-plan.md
-
+  - name: implement
+    completed: 2026-04-20T07:55:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts: []
 enables_bolts:
   - bolt-guest-details-tab-1
@@ -32,7 +34,6 @@ enables_bolts:
   - bolt-shell-and-check-in-1
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2

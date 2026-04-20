@@ -2,11 +2,11 @@
 id: 009-channel-discovery-group
 unit: 002-registration-tab
 intent: 001-room-registration
-status: draft
+status: complete
 priority: should
-created: 2026-04-20T07:20:00Z
+created: 2026-04-20T07:20:00.000Z
 assigned_bolt: bolt-registration-tab-1
-implemented: false
+implemented: true
 ---
 
 # Story: 009-channel-discovery-group

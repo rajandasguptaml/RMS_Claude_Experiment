@@ -2,11 +2,11 @@
 id: 007-additional-services-add-edit
 unit: 002-registration-tab
 intent: 001-room-registration
-status: draft
+status: complete
 priority: must
-created: 2026-04-20T07:20:00Z
+created: 2026-04-20T07:20:00.000Z
 assigned_bolt: bolt-registration-tab-1
-implemented: false
+implemented: true
 ---
 
 # Story: 007-additional-services-add-edit

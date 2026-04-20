@@ -4,6 +4,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import { RegistrationTab } from './features/registration/index.js'
+import { BlankRegistrationCard } from './features/registration/pages/BlankRegistrationCard.jsx'
+import { RequireAuth } from './shared/auth/RequireAuth.jsx'
 import './App.css'
 
 function Home() {
@@ -128,6 +130,14 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dev/registration-tab" element={<RegistrationTab />} />
+      <Route
+        path="/front-office/room-registration/blank-registration-card"
+        element={
+          <RequireAuth>
+            <BlankRegistrationCard />
+          </RequireAuth>
+        }
+      />
     </Routes>
   )
 }

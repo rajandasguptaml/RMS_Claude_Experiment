@@ -3,15 +3,15 @@ id: bolt-complimentary-item-tab-1
 unit: 004-complimentary-item-tab
 intent: 001-room-registration
 type: simple-construction-bolt
-status: planned
+status: in-progress
 stories:
   - 001-tile-grid-responsive-toggle
   - 002-select-all-and-mandatory-lock
   - 003-pre-selection-from-reservation
 created: 2026-04-20T07:25:00Z
-started: null
+started: 2026-04-20T08:50:00Z
 completed: null
-current_stage: null
+current_stage: plan
 stages_completed: []
 
 requires_bolts:

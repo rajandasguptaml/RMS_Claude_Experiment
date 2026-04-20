@@ -3,22 +3,26 @@ id: bolt-blank-registration-card-1
 unit: 007-blank-registration-card
 intent: 001-room-registration
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-static-27-field-form-layout
   - 002-policy-clauses-consent-signatures
   - 003-print-optimization-and-auth-gate
-created: 2026-04-20T07:25:00Z
-started: null
-completed: null
+created: 2026-04-20T07:25:00.000Z
+started: 2026-04-20T08:35:00.000Z
+completed: "2026-04-20T08:41:52Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2026-04-20T08:40:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-04-20T08:45:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts: []
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 1
