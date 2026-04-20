@@ -1,0 +1,6 @@
+project_type: frontend-app
+initialized_at: 2026-04-20T06:45:00Z
+notes: |
+  React 19 + Vite SPA. Building the Room Registration UI against an
+  existing Cubix HMS backend (master-data APIs, tokenization service,
+  Night Audit, Bill Transfer, Guest Profile Store are assumed to exist).

@@ -1,0 +1,1701 @@
+=== PAGE 1 ===
+BUSINESS REQUIREMENTS DOCUMENT (BRD)
+Room Registration Module — Cubix HMS Front Office
+Cubix Hotel Management System v13.1.0 | Version 2.0 — CONFIRMED FINAL | ✓ Ready for
+Development & QA
+Field Details
+Document Title Room Registration Module — Cubix HMS Front Office
+System Cubix Hotel Management System (HMS) v13.1.0
+Module URL /front_office/new-room-registration
+Prepared by Senior Business Analyst / Product Owner
+Application Date Observed 05-03-2026
+Document Version 2.0 — CONFIRMED FINAL
+Status Ready for Development & QA
+1. EXECUTIVE SUMMARY
+The Room Registration module is the core transactional screen within the Cubix HMS Front
+Office suite. It enables front desk agents to formally check-in both walk-in and pre-booked
+(reservation-linked) guests by creating a Room Registration record identified by a unique
+system-generated number in the format RR########.
+The module is structured as a 6-element tab wizard: Registration, Guest Details,
+Complimentary Item, Others Information, Search, and Blank Registration Card. The workflow
+captures room assignment, occupancy configuration, rate calculation, complete guest
+demographics, identity documentation, complimentary service selections, departure
+logistics, credit card guarantee details, and supplemental classification data — all within a
+single, integrated interface.
+Upon completion, the front desk agent activates the global Check-in button, which
+transitions the guest status to "In-House", updates room inventory, opens the guest billing
+account, and posts initial room charges. The Search sub-module provides multi-field search
+across all historical and active registration records with per-record actions including Edit, Re-
+activate, Bill Preview, Split Bill Preview, and Registration Card printing.
+Key confirmed business rules include: enforced adult-to-guest-record count matching
+before check-in; manager/supervisor approval with room availability revalidation for re-
+activation; PCI-DSS compliant card data handling with tokenization; package-driven
+mandatory complimentary item defaults; optimistic-lock concurrency control for room
+assignment; a new digital marketing channel-discovery field; and conditional mandatory
+logic for Meal Plan and Reference depending on booking type (reservation-linked vs. walk-in).
+2. MODULE CONTEXT & POSITIONING
+2.1 Parent Module
+=== PAGE 2 ===
+Front Office — Room Registration is a core sub-module of the Front Office parent module in
+Cubix HMS.
+2.2 Sibling Modules (Front Office)
+Dashboard | Room Reservation | Online Reservations | Room Change | Room Calendar | Bill
+Transfer | Guest Search | Guest Bill Payment | Reservation Payment | Bill Adjustment |
+Night Audit | Service Bill | Service List | Reference | Reservation Cancellation | Reports
+2.3 Dependencies
+Internal Data Dependencies
+Dependency Purpose
+Room Reservation Optional linkage; pre-populates check-in/out dates and room type
+Room Inventory Supplies Room Types and Room Number availability for the Room List
+modal
+Company Master Populates Listed Company dropdown (corporate billing)
+Currency Master Populates Currency Name dropdown and provides Conversion Rate
+Reference Master Populates Reference dropdown (29+ booking source entries)
+Guest Profile Store Enables returning guest search and profile pre-fill on Guest Details tab
+Service/Charge Master Populates Additional Service Name dropdown (25 services)
+Complimentary Items
+Master
+Supplies all 29 complimentary items; defines package-level mandatory
+item defaults
+Airline Master Populates Airlines Name dropdown (65 airlines)
+Meal Plan Master Populates Meal Plan dropdown (9+ options)
+Market Segment Master Populates Market Segment dropdown
+Guest Source Master Populates Guest Source dropdown
+User/Staff Master Provides logged-in user identity for audit trail and role-based access
+control
+External and Operational Dependencies
+Dependency Purpose
+Night Audit Process Closes the business day; affects active In-House billing records
+Bill Transfer / Bill Adjustment Post-check-in billing modules depend on the registration record as
+source
+PCI-DSS Tokenization Service Tokenizes credit card data before persistence; raw numbers never
+stored
+Role-Based Access Control
+(RBAC)
+Manager/Supervisor role required for Re-activate Registration
+approval
+Room Concurrency Lock
+Mechanism
+Prevents double-booking via optimistic locking on room
+assignment
+=== PAGE 3 ===
+Browser Print Subsystem Used for Blank Registration Card and pre-filled Registration Card
+printing
+3. FUNCTIONAL REQUIREMENTS
+FR-001 — Tab Navigation and Wizard Flow
+Unique ID: FR-001 | Actor: Front Desk Agent
+Description: The Room Registration screen is organized as a 6-element tab strip providing a
+guided data-entry workflow. Navigation between tabs is free and non-sequential.
+Preconditions: User is authenticated and has navigated to Front Office → Room Registration.
+Trigger: User lands on the Room Registration page URL.
+Step-by-step Flow:
+1. System renders the page with the Registration tab active by default.
+2. Tab strip displays six elements: Registration | Guest Details | Complimentary Item |
+Others Information | Search | Blank Registration Card.
+3. The first four are content tabs; Search is a display-and-action tab; Blank Registration
+Card is a direct-action link opening a new browser tab.
+4. User may click any tab at any time — no sequential enforcement at the navigation
+level.
+5. A global Check-in button (id="check-in") is fixed below all tab content and remains
+visible at all times.
+6. Clicking Blank Registration Card opens /front_office/room-registration/blank-
+registration-card in a new browser tab.
+System Response: Active tab content is shown; all other panes are hidden via CSS. Check-in
+button always accessible.
+Alternate/Exception Flow: Clicking Check-in before completing required fields triggers cross-
+tab field validation, surfacing errors on specific fields regardless of active tab.
+FR-002 — Registration Tab: Header Section
+Unique ID: FR-002 | Actor: Front Desk Agent
+Description: Defines booking context: optional reservation linkage, stay dates/times,
+company billing association, and currency settings.
+Trigger: Agent begins a new room registration (walk-in or reservation-linked).
+Step-by-step Flow:
+1. Reservation (optional): Agent checks the Reservation checkbox to enable the
+reservation dropdown and selects a pending reservation number. System auto-populates
+Check-In Date, Departure Date, and Total Nights. For walk-in registrations the checkbox
+remains unchecked.
+2. Check-In Date (required): Defaults to application date. Agent may change via date
+picker.
+=== PAGE 4 ===
+3. Check-In Time: Defaults to 02:00 PM. Agent may change via time picker.
+4. Departure Date (required): Defaults to next calendar day. Must be strictly after
+Check-In Date.
+5. Checkout Time: Defaults to 12:00 PM.
+6. Total Nights: Auto-calculated (Departure Date minus Check-In Date). Checkbox
+allows manual override.
+7. Listed Company (optional): Checking enables the company dropdown and reveals
+four conditional fields (see FR-003).
+8. Currency Name (required): Defaults to BDT. Selectable from currency master.
+9. Conversion Rate: Read-only; auto-populated from currency master. Must be non-
+zero.
+System Response: Total Nights recalculates dynamically. Currency rate fetched on currency
+selection.
+Alternate/Exception Flow: Check-In Date ≥ Departure Date → validation error. No
+reservation selected → walk-in path; Meal Plan and Reference become optional (BR-020).
+Conversion Rate zero → system prompts to verify currency master.
+FR-003 — Registration Tab: Conditional Company Fields
+Unique ID: FR-003 | Actor: Front Desk Agent
+Description: Four fields are conditionally displayed only when the Listed Company checkbox
+is checked (CSS class: listed_company_required_fields, display:none by default).
+Field Type Options / Notes
+Contact
+Person
+Text input Company's designated contact for this booking
+Mobile
+Number
+Text input Contact person's phone number
+Payment
+Mode
+Dropdown Self / Company / Before C/O (Company/Host)
+Pay For Dropdown Room Only / Room and Food / Room, Food and Laundry / Everything
+including hard drink and mini bar / Everything without
+Alternate/Exception Flow: Unchecking the checkbox hides and clears all four fields. Walk-in
+guests (no company) do not have access to Payment Mode via this mechanism.
+FR-004 — Registration Tab: Room Detailed Information
+Unique ID: FR-004 | Actor: Front Desk Agent
+Description: Enables room type selection, occupancy definition, room number assignment
+via an availability modal, and complete rate structure configuration.
+Step-by-step Flow:
+=== PAGE 5 ===
+1. Agent selects Room Types (9+ types: Signature Suite-River View, Business Class
+Twin-River View, Super Deluxe King-River View, Deluxe Twin-River View, Deluxe King-City
+View, Executive Suite-River View, Business Class King-River View, etc.).
+2. Agent enters Adult (Per Room) (numeric, default: 1) and Child (Per Room) (numeric,
+default: 0).
+3. Agent clicks Room List button → modal opens showing available rooms (columns:
+Select | Room Number). Agent selects a room → modal closes → Room Number auto-filled.
+Concurrency lock acquired on selection.
+4. Rack Rate auto-populates from room type/rate master.
+5. Agent sets Discount Type (Fixed [default] or Percent) and Discount Amount (default:
+0). System computes Negotiated Rate.
+6. Four charge fields with inclusion checkboxes: Service Charge * | VAT Amount * |
+City Charge * | Additional Charges *
+7. Total Room Rent Amt * = Rack Rate − Discount + Service Charge + VAT + City Charge
++ Additional Charges.
+8. RRC Button: Opens "Calculate Room Rate Inclusively" modal. Agent enters target
+Total; system reverse-calculates all components. Agent clicks Apply Rate to push values to
+form.
+9. Per-room dates: Check-In Date *, Departure Date *, Number of Night *. Sync with
+header when "Same as global date" is checked.
+10. Room status flags: Same as global date (default: checked) | No Post |
+Complimentary | House Use
+Alternate/Exception Flow: No available rooms → empty Room List modal. Discount exceeds
+Rack Rate → validation error. Room locked by another session → excluded from Room List.
+FR-005 — Registration Tab: Additional Service
+Unique ID: FR-005 | Actor: Front Desk Agent
+Description: Attaches one or more additional billable services to the registration record
+beyond base room rent.
+25 Available Services: Additional Room Revenue, Airport Drop, Airport Pickup, Business
+Center, Café, Damage Charge, Extra Bed Charge, Extra Breakfast, Early Check-in Fee, Gym,
+Half Day Charge, Laundry, Minibar, Missing Charge, Miscellaneous, No Show Charge,
+Restaurant, Spa, Transport, Full Day Charge, Swimming Pool, Recreation, Driver
+Accommodation, Massage Chair.
+Flow: Select Service Name → Service From/To Date defaults to check-in date → Enter Total
+Service Amount → optionally use RRC for reverse calculation → repeat for multiple services.
+Alternate/Exception Flow: Amount entered without Service Name selected → system
+prevents saving.
+FR-006 — Registration Tab: Supplemental Classification Fields
+Unique ID: FR-006 | Actor: Front Desk Agent
+Field Type Required Notes
+=== PAGE 6 ===
+Market
+Segment
+Dropdown No Dhaka Office / Cox's Office
+Guest
+Source
+Dropdown No Web Site / Marketing / Other Source / Broker
+Meal Plan Dropdown Conditional* Required for reservation-linked; optional for walk-in. 9+
+options: BED ONLY, BED & BREAKFAST, HALF BOARD,
+FULL BOARD, etc.
+Reference Dropdown Conditional* Required for reservation-linked; optional for walk-in. 29+
+options.
+Hotel
+Remarks
+Text area No Internal staff-visible notes; not shown to guest
+POS
+Remarks
+Text area No Notes passed to Point of Sale system
+FR-007 — Registration Tab: Room Summary Grid
+Unique ID: FR-007 | Actor: Front Desk Agent
+Grid Columns: Room Type | Room Number | Adult | Child | Checkin Date | Checkout Date |
+No. Of Night | Room Rate | Additional Service | Status | Action
+Flow: Agent clicks Add → row appended. Edit row → form repopulated → Update button
+replaces Add. Delete row → row removed. Cancel discards current unsaved configuration.
+Alternate/Exception Flow: Add without Room Type or Room Number → inline validation
+error; row not added.
+FR-008 — Guest Details Tab
+Unique ID: FR-008 | Actor: Front Desk Agent
+Description: Captures full demographic, contact, identity document, and file data for each
+individual guest. Enforces guest record count equals declared adult count before check-in.
+Tab Header Fields: Person (Adult) [read-only] | Person (Child) [read-only] |
+Family/Group/Couple [checkbox]
+Basic Information:
+Field Type Required Notes
+Title Dropdown Yes MR. / MRS. / MS. / MR. & MRS. / DR. / NOT APPLICABLE /
+MR. MRS.
+First Name Text Yes
+Last Name Text No
+Gender Dropdown No Male / Female / Other
+Room No. Dropdown Yes Populated from registered rooms in FR-007
+Full Guest
+Name
+Text Yes Auto-composed or manual entry
+=== PAGE 7 ===
+Date of Birth Date No Format: DD/MM/YYYY
+Search Button — Queries guest profile store by name/DOB. Blocked Guest
+→ warning shown.
+Contact Information:
+Field Type Required Notes
+Email Address Text No email@example.com
+Phone Number Text No +880 XXX-XXXXXXXX
+Profession Dropdown No DR / EN / Other
+Company Name Dropdown No From company master
+Address Text No Street address
+City Text No
+Zip Code Numeric No
+Country Dropdown Yes Default: Bangladesh
+Nationality Text No Default: Bangladeshi
+National ID Numeric No
+Driving License Text No
+Visa Information: Visa Number | Visa Issue Date (DD/MM/YYYY) | Visa Expiry Date
+(DD/MM/YYYY)
+Passport Information: Passport Number | Passport Issue Date (DD/MM/YYYY) | Passport
+Expiry Date (DD/MM/YYYY)
+Additional Information: Guest Document [file upload: JPEG/PNG/PDF] | Blocked Guest
+[checkbox] | Is Contact Person [checkbox]
+Form Actions: Add (default visible) | Update (visible during edit mode only) | Clear |
+Previous | Next
+Guest Summary Grid Columns: Guest Name | Email | Room Number | Is Contact Person |
+Action
+Enforcement: At Check-in, system validates guest record count = total declared adults. If
+counts differ → Check-in is blocked.
+Alternate/Exception Flow: Missing required fields → Add blocked. Guest count mismatch →
+Check-in blocked with message. Blocked Guest returned by Search → warning alert before
+proceeding.
+FR-009 — Complimentary Item Tab
+Unique ID: FR-009 | Actor: Front Desk Agent
+Description: Selects complimentary amenities included with the stay. Package-mandatory
+items cannot be deselected. Zero complimentary items is valid if the package has no
+mandatory items.
+=== PAGE 8 ===
+UI: 30 checkboxes = 1 "Select All" master + 29 individual service items in a 4-column grid.
+Package-mandatory items: Pre-checked and rendered as HTML disabled checkboxes; cannot
+be unchecked by agent.
+Select All: Toggles all non-mandatory items. Mandatory items remain checked regardless.
+Navigation: Previous (input button) → Guest Details | Next (input button) → Others
+Information
+Complete Item List (29 items): Airport Pick-Up & Drop | Airport Drop | Welcome Fruit
+Basket in Room | Buffet Breakfast/A la Carte menu | After Noon High Tea at 4:30pm–
+6:00pm | 2 Bottle Mineral Water | 1 Large Bottle Mineral Water | 2pcs Laundry Daily | Daily
+Newspaper | VVIP Fruit Basket in Room | 4 Bottle Mineral Water | Personal Butler | Access
+to Swimming Pool & Health Club/Gym | Wi-Fi Internet Access in Room, Restaurant & Lobby
+| 24 Hour Room Services | Airport Pickup | No-Mini Bar | Buffet Lunch | Buffet Dinner |
+Complimentary Breakfast and Dinner | Tit-Bits | Buffet Breakfast in Patenga Restaurant |
+Cookies Platter/Fruit Basket | Complimentary Breakfast | 2 Tea and 2 Coffee with milk and
+sugar | Welcome Drinks on Arrival | Access to Health Club/Gym | Swimming Pool Access |
+Tea/Coffee making facilities in room
+FR-010 — Others Information Tab: Other Information Sub-Section
+Unique ID: FR-010 | Actor: Front Desk Agent
+Field Type Required Notes
+Coming From Text No Guest origin city/country
+Next Destination Text No Onward travel destination
+Visit Purpose Text No Business / Leisure / Medical etc.
+Complimentary Guest Dropdown No NO / YES
+House Use Dropdown No YES / NO
+Room Owner Dropdown No NO / YES
+Is Previously Visited
+Guest?
+Checkbox No Flags returning visitor
+Is Guest VIP? Checkbox No Flags VIP status for elevated service
+How did you find out
+about our hotel? (NEW)
+Checkbox
+group
+No Facebook / Website / Google / Others —
+stored digitally as SET type for marketing
+channel reporting and campaign attribution
+FR-011 — Others Information Tab: Departure Information Sub-Section
+Unique ID: FR-011 | Actor: Front Desk Agent
+Field Type Required Notes
+Airport Drop Dropdown No --- Please Select --- / NO / YES / TBA
+Airlines Name Dropdown No 65 airlines (Biman, Emirates, Qatar Airways, Air India,
+Cathay Pacific, etc.)
+=== PAGE 9 ===
+Flight Number Text No Free text
+Departure Time
+(ETD)
+Time
+picker
+No Estimated time of departure
+FR-012 — Others Information Tab: Credit Card Information Sub-
+Section
+Unique ID: FR-012 | Actor: Front Desk Agent
+Description: Captures payment guarantee credit card details. Subject to full PCI-DSS
+compliance: card data is tokenized before persistence; raw card numbers are never stored in
+plain form.
+Field Type Required Notes
+Card Type Dropdown No American Express / Master Card / Visa Card / Discover
+Card / Taka Pay
+Card Number Numeric
+(masked)
+No Displayed as last 4 digits only after entry (e.g., ****
+**** **** 1234). Tokenized on submission.
+Card Holder
+Name
+Text No Name as printed on the card
+Expiry Date Text No Format: MM/YY
+Card
+Reference
+Text No Terminal authorization / reference code
+PCI-DSS Compliance: Raw card number exists only in transit to the tokenization service over
+TLS. Only the token is persisted. Full card numbers are never written to logs, databases, or
+audit tables.
+Navigation: Previous (input button) only — this is the final data-entry tab before Check-in.
+Alternate/Exception Flow: All fields optional; registrations proceed without card capture.
+Tokenization service unavailable → Check-in blocked; agent is prompted to retry or contact
+IT.
+FR-013 — Check-in Action (Global)
+Unique ID: FR-013 | Actor: Front Desk Agent
+Description: The globally visible Check-in button finalizes the Room Registration, creates the
+guest billing account, and transitions status to In-House.
+Preconditions: At least one room added; guest record count = total adult count; all
+conditionally required fields complete per booking type.
+Trigger: Agent clicks the global Check-in button (id="check-in", green, below all tab panes).
+Step-by-step Flow:
+1. System executes cross-tab mandatory field validation.
+2. System validates guest record count equals total declared adult count.
+3. For reservation-linked registrations: validates Meal Plan and Reference are selected.
+=== PAGE 10 ===
+4. System performs optimistic concurrency lock check on the room.
+5. System invokes PCI-DSS tokenization service for card data (if provided).
+6. System generates Registration Number: RR + 8-digit zero-padded sequential integer
+(e.g., RR00002293). Immutable after generation.
+7. System persists full registration record with status "In-House."
+8. System updates Room Inventory: room(s) status set to "Occupied."
+9. System opens guest billing account and posts initial room charge.
+10. System writes audit log: User ID, Username, timestamp, action = "Check-in",
+Registration ID.
+11. System releases concurrency lock on the room.
+12. System displays success confirmation with generated Registration Number.
+Failure Condition System Response
+Required field missing Fields highlighted across all tabs; Check-in blocked; error
+summary shown
+Guest count < adult count "Guest records must match the declared adult count. Please
+complete Guest Details." Blocked.
+Reservation-linked + Meal Plan or
+Reference missing
+Validation error on specific fields; Check-in blocked
+Room concurrency conflict "Room [X] is no longer available. Please select a different
+room." Blocked.
+Tokenization service unavailable "Payment guarantee processing is unavailable. Please try
+again or contact IT support." Blocked.
+Check-In Date ≥ Departure Date Validation error on date fields; Check-in blocked
+FR-014 — Search Tab
+Unique ID: FR-014 | Actor: Front Desk Agent / Manager / Supervisor
+Description: Multi-criteria search and management interface for all Room Registration
+records (2,291+ in live system).
+Search Filter Fields: Room Types (dropdown) | Room Number | Registration No. |
+Reservation Number | Check-In Date | Company Name (dropdown) | Country (dropdown) |
+Name of the Guest | Guest Phone Number | Contact Person Phone Number | Reference
+(dropdown)
+Actions: Search button (server-side query) | Clear button (reset filters)
+Results Grid Columns: Registration No. (sortable ↑↓) | Guest Name | Mobile | Company |
+Room Info | Check In | Check Out | Status | Action
+Status values: In-House (blue badge) | Checked Out (red badge). Status column also shows
+CheckIn By and CheckOut By usernames for audit visibility.
+DataTable Controls: Show entries: 10 / 25 / 50 / 100 | Client-side search input | Pagination
+with "Showing X to Y of Z entries"
+Per-Row Action Elements:
+=== PAGE 11 ===
+# Label Type Trigger Description
+1 Edit Button
+(cyan)
+showFoRegGuestData(registrationId) Loads full registration
+into Registration tab in
+edit mode
+2 Re-activate
+Registration
+Button
+(orange)
+reactiveRegistration(registrationId) Initiates re-activation
+workflow (see FR-015)
+3 Bill Preview Anchor link
+(green)
+/room-registration/bill-preview/{id} Opens guest bill in
+printable view in new
+tab
+4 Split Bill
+Preview
+Button
+(cyan)
+openSplitBillModal(id, guestName) Opens split billing
+configuration modal
+5 Registration
+Card
+Anchor link
+(purple)
+/room-registration/pre-registration-
+card/{id}
+Opens pre-filled
+registration card for
+printing
+FR-015 — Re-activate Registration
+Unique ID: FR-015 | Actor: Manager / Supervisor (Front Desk Agents do NOT have this
+permission)
+Description: Reinstates a Checked-Out registration to In-House status, subject to role-based
+approval, room availability revalidation, and date validation.
+Preconditions: Registration status is "Checked Out." Acting user has Manager or Supervisor
+role.
+Step-by-step Flow:
+1. System presents re-activation confirmation dialog: Registration No., Guest Name,
+Room Info, original Check-In/Check-Out dates.
+2. System prompts for manager/supervisor credentials or approval code.
+3. System validates approving user has Manager or Supervisor role.
+4. System revalidates room availability: room must not be assigned to another active
+In-House registration for any overlapping date range.
+5. System validates stay dates fall within the operationally permissible window
+(configurable threshold).
+6. If all checks pass: status set to "In-House"; Room Inventory updated to "Occupied."
+7. Audit log written: Approving User ID, Username, timestamp, action = "Re-activate",
+Registration ID.
+8. Success confirmation displayed.
+Failure Condition System Response
+User lacks
+Manager/Supervisor role
+"You do not have permission to re-activate registrations." Blocked.
+Invalid approval credentials "Invalid credentials. Re-activation denied." Blocked.
+Room currently occupied "Room [X] is currently occupied by another guest. Please assign an
+alternative room." Blocked.
+=== PAGE 12 ===
+Dates outside permissible
+window
+"The check-in date is no longer valid for re-activation." Blocked.
+FR-016 — Blank Registration Card
+Unique ID: FR-016 | Actor: Front Desk Agent
+Description: Generates a printable blank registration card for physical guest signature
+capture.
+URL: /front_office/room-registration/blank-registration-card (new browser tab)
+Card Content: Hotel letterhead (Cubix HMS logo, name, address, hotline: +880 1719-757002,
+website: www.cubixbd.com, email: cubixbd@gmail.com) | Print Date auto-stamp
+(DD/MM/YYYY HH:MM AM/PM) | Blank-field table: Reservation No. | Registration No. |
+Room Type | Room Number | Room Rate | Payment Mode | Person Adult | Person Child |
+Company Name | Guest Name | Phone Number | Email Address | Arrival Date | Departure
+Date | Address | Date of Birth | Gender | Country | Visit Purpose | Nationality | Coming
+From | Next Destination | Profession | City | Zip Code | NId/Driving License | Pass. Number
+| Place of Issue | Pass Issue Date | Date of Expiry | Visa Number | Visa Issue Date | Visa
+Date of Expiry
+"How did you find out about our hotel?" Print checkboxes: Facebook / Website / Google /
+Others
+Terms and Conditions: Hotel liability disclaimer for valuables. Lost/damaged key card
+replacement fee: BDT 500 or equivalent at current exchange rate.
+Signature Lines: Guest Signature | Authorized Signature
+Alternate/Exception Flow: Page load failure → browser standard error displayed.
+4. DATA MODEL
+4.1 Entities and Fields
+Entity: RoomRegistration
+Field Name Type Required Description
+registration_id INT (PK, auto-increment) Yes Internal primary
+key
+registration_no VARCHAR(20) Yes Display ID: RR + 8-
+digit zero-padded
+sequence.
+Immutable after
+generation.
+reservation_id INT (FK, nullable) No Linked reservation;
+NULL for walk-in
+registrations
+is_walk_in BOOLEAN Yes TRUE if no
+=== PAGE 13 ===
+reservation is linked
+check_in_date DATE Yes Guest arrival date
+check_in_time TIME Yes Default: 14:00
+departure_date DATE Yes Expected departure
+date; must be after
+check_in_date
+checkout_time TIME Yes Default: 12:00
+total_nights INT Yes departure_date
+minus
+check_in_date in
+calendar days
+listed_company_id INT (FK, nullable) No Corporate billing
+company reference
+contact_person VARCHAR(100) No Company contact
+name (conditional
+on
+listed_company_id)
+mobile_number VARCHAR(20) No Company contact
+phone (conditional)
+payment_mode ENUM('Self','Company','Before C/O') No Billing mode
+(conditional on
+company selection)
+pay_for ENUM No Billing scope
+(conditional)
+currency_id INT (FK) Yes Currency master
+reference
+conversion_rate DECIMAL(10,4) Yes Exchange rate at
+time of registration;
+must be non-zero
+market_segment_id INT (FK, nullable) No Market segment
+classification
+guest_source_id INT (FK, nullable) No Guest source
+classification
+meal_plan_id INT (FK, nullable) Conditional Required when
+reservation-linked;
+optional for walk-in
+reference_id INT (FK, nullable) Conditional Required when
+reservation-linked;
+optional for walk-in
+hotel_remarks TEXT No Internal staff notes
+pos_remarks TEXT No POS system notes
+channel_discovery SET('Facebook','Website','Google','Others') No How guest found
+the hotel (new
+=== PAGE 14 ===
+digital field for
+marketing analytics)
+status ENUM('In-House','Checked Out') Yes Current registration
+status
+created_by INT (FK) Yes Creating user ID
+(audit)
+created_at DATETIME Yes Record creation
+timestamp (audit)
+updated_by INT (FK, nullable) No Last updating user
+ID (audit)
+updated_at DATETIME No Last update
+timestamp (audit)
+reactivated_by INT (FK, nullable) No Approving
+manager/supervisor
+user ID for re-
+activation
+reactivated_at DATETIME No Re-activation
+timestamp
+Entity: RoomRegistrationRoom
+Field Name Type Required Description
+rr_room_id INT (PK) Yes Primary key
+registration_id INT (FK) Yes Parent registration
+room_type_id INT (FK) Yes Room type master reference
+room_number_id INT (FK) Yes Specific room assigned from Room
+Inventory
+adult_count INT Yes Adults per room (default: 1)
+child_count INT Yes Children per room (default: 0)
+rack_rate DECIMAL(12,2) Yes Published room rate from master
+discount_type ENUM('Fixed','Percent') No Discount calculation method
+discount_amount DECIMAL(12,2) No Discount value (default: 0). Must not
+exceed rack_rate.
+negotiated_rate DECIMAL(12,2) No Custom override rate (computed from
+rack_rate minus discount)
+service_charge DECIMAL(12,2) Yes Service charge amount
+vat_amount DECIMAL(12,2) Yes VAT amount
+city_charge DECIMAL(12,2) Yes City/tourism levy
+additional_charges DECIMAL(12,2) Yes Miscellaneous additional charges
+total_room_rent_amt DECIMAL(12,2) Yes Final computed room total
+=== PAGE 15 ===
+check_in_date DATE Yes Per-room arrival date
+departure_date DATE Yes Per-room departure date
+number_of_nights INT Yes Per-room night count
+same_as_global_date BOOLEAN Yes Date sync flag (default: TRUE)
+no_post BOOLEAN No Suppress nightly charge posting
+is_complimentary BOOLEAN No Complimentary room flag; no charge
+posted
+is_house_use BOOLEAN No Internal hotel use room flag
+concurrency_token VARCHAR(36) Yes UUID-based optimistic lock token for
+room assignment conflict prevention
+Entity: RoomRegistrationService
+Field Name Type Required Description
+rr_service_id INT (PK) Yes Primary key
+registration_id INT (FK) Yes Parent registration
+service_id INT (FK) Yes Service master reference (25 services)
+service_from_date DATE Yes Service start date (defaults to check-in date)
+service_to_date DATE Yes Service end date
+total_service_amount DECIMAL(12,2) Yes Total amount for this service
+Entity: GuestDetail
+Field Name Type Required Description
+guest_detail_id INT (PK) Yes Primary key
+registration_id INT (FK) Yes Parent registration
+guest_profile_id INT (FK, nullable) No Link to existing guest profile
+store (returning guest)
+room_number_id INT (FK) Yes Assigned room from
+RoomRegistrationRoom
+title VARCHAR(20) Yes MR./MRS./MS./DR. etc.
+first_name VARCHAR(100) Yes Guest first name
+last_name VARCHAR(100) No Guest last name
+full_guest_name VARCHAR(200) Yes Full display name
+gender ENUM('Male','Female','Other') No
+date_of_birth DATE No DD/MM/YYYY
+email_address VARCHAR(150) No Guest email
+=== PAGE 16 ===
+phone_number VARCHAR(30) No International format
+profession_id INT (FK, nullable) No Profession master reference
+company_id INT (FK, nullable) No Company master reference
+address TEXT No Street address
+city VARCHAR(100) No
+zip_code VARCHAR(20) No
+country_id INT (FK) Yes Default: Bangladesh
+nationality VARCHAR(100) No Default: Bangladeshi
+national_id VARCHAR(50) No National ID number
+driving_license VARCHAR(50) No Driving license number
+visa_number VARCHAR(50) No
+visa_issue_date DATE No
+visa_expiry_date DATE No
+passport_number VARCHAR(50) No
+passport_issue_date DATE No
+passport_expiry_date DATE No
+guest_document_path VARCHAR(500) No Stored file path/URL of
+uploaded document
+(JPEG/PNG/PDF)
+is_blocked BOOLEAN No Blocked guest flag; triggers
+warning on retrieval
+is_contact_person BOOLEAN No Primary
+billing/communication contact
+designation
+is_family_group BOOLEAN No Family/Group/Couple
+registration flag
+Entity: ComplimentaryItemSelection
+Field Name Type Required Description
+comp_sel_id INT (PK) Yes Primary key
+registration_id INT (FK) Yes Parent registration
+comp_item_id INT (FK) Yes Complimentary item master reference (29 items)
+is_selected BOOLEAN Yes Whether the item is included
+is_mandatory BOOLEAN Yes TRUE if required by the package; cannot be deselected
+Entity: OthersInformation
+=== PAGE 17 ===
+Field Name Type Required Description
+others_id INT (PK) Yes Primary key
+registration_id INT (FK) Yes Parent
+registration
+(one-to-one)
+coming_from VARCHAR(200) No Origin
+city/country
+next_destination VARCHAR(200) No Onward
+destination
+visit_purpose VARCHAR(200) No Purpose of stay
+is_complimentary_guest BOOLEAN No Complimentary
+guest flag
+is_house_use BOOLEAN No House use flag
+is_room_owner BOOLEAN No Room owner
+flag
+is_previously_visited BOOLEAN No Returning guest
+flag
+is_vip BOOLEAN No VIP guest flag
+channel_discovery SET('Facebook','Website','Google','Others') No How guest
+found the hotel
+(digital
+marketing
+analytics)
+airport_drop ENUM('NO','YES','TBA') No
+airline_id INT (FK, nullable) No Airline master
+reference
+flight_number VARCHAR(20) No Outbound flight
+number
+departure_time_etd TIME No Estimated
+departure time
+card_type ENUM No AmEx / Master
+Card / Visa Card
+/ Discover Card
+/ Taka Pay
+card_token VARCHAR(200) No PCI-DSS
+tokenized card
+reference. Raw
+card number
+NEVER stored.
+card_last_four CHAR(4) No Last 4 digits of
+card number for
+display only
+card_holder_name VARCHAR(100) No Name as on
+=== PAGE 18 ===
+card
+card_expiry_date VARCHAR(7) No MM/YY format
+card_reference VARCHAR(100) No Terminal
+authorization
+reference code
+4.2 Entity Relationships
+ RoomRegistration → Reservation: Many-to-one (optional; nullable FK)
+ RoomRegistration → RoomRegistrationRoom: One-to-many (one registration,
+multiple room assignments)
+ RoomRegistration → RoomRegistrationService: One-to-many (zero or more
+additional services)
+ RoomRegistration → GuestDetail: One-to-many (one guest record per adult; count
+must equal declared adult total)
+ RoomRegistration → ComplimentaryItemSelection: One-to-many (zero or more;
+mandatory items flagged)
+ RoomRegistration → OthersInformation: One-to-one
+ GuestDetail → GuestProfile: Many-to-one (optional; enables returning guest pre-fill)
+ GuestDetail → RoomRegistrationRoom: Many-to-one (guest assigned to specific
+room)
+5. UI COMPONENTS SUMMARY
+5.1 Page Layout Structure
+ Top Navigation Bar: Hamburger menu | Home icon (link to main dashboard) |
+Application Date display (05-03-2026) | Settings icon | Logged-in user name ("Test User") |
+User avatar
+ Left Sidebar: Collapsible Front Office module tree with all sibling module links
+ Real-time Clock: Displays current time in HH:MM:SS format (top-left of sidebar)
+ Tab Strip: Six elements across the top of the content area (Registration active by
+default)
+ Main Content Area: Tab-specific form content; changes on tab click
+ Global Check-in Button: Green, large, centered; fixed below all tab panes
+(id="check-in"); always visible
+ Footer Bar: Copyright | Cubix HMS Version (V-13.1.0) | Location (Dhaka, Bangladesh)
+5.2 Registration Tab UI Elements
+Element Type Default Value Behavior
+Reservation checkbox
++ dropdown
+Checkbox +
+Select
+Unchecked /
+Please Select
+Checkbox enables dropdown. Selecting a
+reservation pre-fills dates.
+Check-In Date Date text Application Required. Date picker enabled.
+=== PAGE 19 ===
+input date
+Check-In Time Time input 02:00 PM Editable time picker.
+Departure Date Date text
+input
+Next calendar
+day
+Required. Must be after Check-In Date.
+Checkout Time Time input 12:00 PM Editable time picker.
+Total Nights Number +
+checkbox
+1 Auto-calculated. Checkbox right of field
+toggles auto-recalculation.
+Listed Company
+checkbox + dropdown
+Checkbox +
+Select
+Unchecked Checkbox enables dropdown and reveals
+4 conditional fields.
+Contact Person Text input Empty Hidden by default. Visible only when
+Listed Company is checked.
+Mobile Number Text input Empty Hidden by default. Visible only when
+Listed Company is checked.
+Payment Mode Dropdown Please Select Hidden by default. Self / Company /
+Before C/O. Visible when Listed Company
+checked.
+Pay For Dropdown Please Select Hidden by default. 5 options. Visible
+when Listed Company checked.
+Currency Name Dropdown BDT Required. Populates Conversion Rate on
+change.
+Conversion Rate Text (read-
+only)
+1.00 Auto-fetched from currency master.
+Non-editable.
+Room Types Dropdown Please Select 9+ room types. Triggers room availability
+filtering.
+Adult (Per Room) Number
+input
+1 Minimum 1.
+Child (Per Room) Number
+input
+0 Minimum 0.
+Room List Button — Opens Room Number modal showing
+available rooms. Acquires concurrency
+lock on selection.
+Room Number Text input Empty Auto-filled from Room List modal. Read-
+only after selection.
+Rack Rate Text input Auto-filled Populated from room type/rate master.
+Discount Type Dropdown Fixed Fixed / Percent.
+Discount Amount Number
+input
+0 Cannot exceed Rack Rate.
+Negotiated Rate Number
+input
+Auto-computed Rack Rate minus applied discount.
+Service Charge * Number +
+checkbox
+Auto-filled Checkbox includes/excludes from total
+calculation.
+=== PAGE 20 ===
+VAT Amount * Number +
+checkbox
+Auto-filled Checkbox includes/excludes from total
+calculation.
+City Charge * Number +
+checkbox
+Auto-filled Checkbox includes/excludes from total
+calculation.
+Additional Charges * Number +
+checkbox
+Auto-filled Checkbox includes/excludes from total
+calculation.
+Total Room Rent Amt
+*
+Number
+input
+Calculated Sum of all charges minus discount.
+Required.
+RRC Button Button — Opens "Calculate Room Rate Inclusively"
+modal for reverse calculation.
+Per-room Check-In
+Date *
+Date text
+input
+Same as header Editable when "Same as global date"
+unchecked.
+Per-room Departure
+Date *
+Date text
+input
+Same as header Editable when "Same as global date"
+unchecked.
+Number of Night * Number
+input
+1 Auto-calculated per-room.
+Same as global date Checkbox Checked Syncs per-room dates with header dates.
+No Post Checkbox Unchecked Suppresses automated charge posting.
+Complimentary Checkbox Unchecked No room charge posted to guest bill.
+House Use Checkbox Unchecked Internal hotel use; not billed to guest.
+Service Name Dropdown Please Select 25 additional service options.
+Service From Date Date text
+input
+Check-in date Defaults to check-in date.
+Service To Date Date text
+input
+Check-in date Defaults to check-in date.
+Total Service Amount Number
+input
+Empty Manual entry.
+RRC (service) Button — Opens RRC modal for service amount
+calculation.
+Market Segment Dropdown Please Select Dhaka Office / Cox's Office.
+Guest Source Dropdown Please Select 4 source options.
+Meal Plan * Dropdown Please Select Conditionally required. 9+ options.
+Reference * Dropdown Please Select Conditionally required. 29+ options.
+Hotel Remarks Text area Empty Free text.
+POS Remarks Text area Empty Free text.
+Add Button (blue) — Adds room row to grid. Hidden during
+edit mode.
+Update Button — Hidden by default. Visible during edit
+mode only.
+=== PAGE 21 ===
+Cancel Button
+(orange)
+— Discards current unsaved room
+configuration.
+Room Summary Grid DataTable Empty 11 columns. Dynamic add/edit/delete
+per row.
+5.3 Guest Details Tab UI Elements
+Element Type Default Behavior
+Person (Adult) Number (read-
+only)
+From
+Registration
+tab
+Not editable on this tab
+Person (Child) Number (read-
+only)
+From
+Registration
+tab
+Not editable on this tab
+Family/Group/Couple Checkbox Unchecked Flags as group registration
+Title * Dropdown -- Select -- MR./MRS./MS./MR. & MRS./DR./NOT
+APPLICABLE/MR. MRS.
+First Name * Text Empty Required
+Last Name Text Empty Optional
+Gender Dropdown -- Select -- Male / Female / Other
+Room No. * Dropdown Empty Populated from registered rooms
+Full Guest Name * Text Empty Auto-composed or manual. Required.
+Date of Birth Date
+(DD/MM/YYYY)
+Empty Date picker
+Search Button — Queries guest profile store. Blocked
+guest triggers warning.
+Email Address Text Empty email@example.com format
+Phone Number Text Empty +880 XXX-XXXXXXXX format
+Profession Dropdown -- Select -- DR / EN / Other
+Company Name Dropdown -- Select -- From company master
+Address Text Empty Street address
+City Text Empty
+Zip Code Numeric Empty
+Country * Dropdown Bangladesh Required
+Nationality Text Bangladeshi Editable default
+National ID Numeric Empty
+Driving License Text Empty
+Visa Number Text Empty
+=== PAGE 22 ===
+Visa Issue Date Date
+(DD/MM/YYYY)
+Empty
+Visa Expiry Date Date
+(DD/MM/YYYY)
+Empty
+Passport Number Text Empty
+Passport Issue Date Date
+(DD/MM/YYYY)
+Empty
+Passport Expiry Date Date
+(DD/MM/YYYY)
+Empty
+Guest Document File upload — JPEG/PNG/PDF accepted. Stored
+securely.
+Blocked Guest Checkbox Unchecked Flags as blocked in system
+Is Contact Person Checkbox Unchecked Primary billing/contact designation
+Add Button — Saves guest. Hidden in edit mode.
+Update Button Hidden Visible during guest row edit mode
+only
+Clear Button — Resets all form fields
+Previous Button — Navigates to Registration tab
+Next Button — Navigates to Complimentary Item tab
+Guest Summary Grid Table Empty Columns: Guest Name | Email | Room
+Number | Is Contact Person | Action
+5.4 Complimentary Item Tab UI Elements
+Element Type Behavior
+Select All Checkbox
+(master)
+Toggles all non-mandatory items. Package-mandatory
+items unaffected.
+29 Service Item
+Checkboxes
+Checkboxes Package-mandatory: pre-checked, HTML disabled. Non-
+mandatory: freely toggleable.
+Previous Input button Navigates to Guest Details tab
+Next Input button Navigates to Others Information tab
+5.5 Others Information Tab UI Elements
+Element Type Behavior
+Coming From Text Free text origin
+Next Destination Text Free text destination
+Visit Purpose Text Free text
+Complimentary Guest Dropdown
+=== PAGE 23 ===
+(NO/YES)
+House Use Dropdown
+(YES/NO)
+Room Owner Dropdown
+(NO/YES)
+Is Previously Visited
+Guest?
+Checkbox Returning visitor flag
+Is Guest VIP? Checkbox VIP protocol flag
+How did you find us?
+(NEW)
+Checkbox group Facebook / Website / Google / Others. Multi-select.
+Stored as SET for analytics.
+Airport Drop Dropdown NO / YES / TBA
+Airlines Name Dropdown 65 airlines from master
+Flight Number Text Free text
+Departure Time (ETD) Time picker Estimated departure time
+Card Type Dropdown AmEx / Master Card / Visa Card / Discover Card / Taka
+Pay
+Card Number Numeric
+(masked)
+Masked to last 4 digits after entry. Tokenized on
+submission.
+Card Holder Name Text
+Expiry Date Text (MM/YY)
+Card Reference Text Terminal authorization code
+Previous Input button Navigates to Complimentary Item tab. Only navigation
+button (no Next).
+5.6 Search Tab UI Elements
+Element Type Behavior
+11 Filter Fields Text / Dropdown Room Types, Room Number, Registration No., Reservation
+Number, Check-In Date, Company Name, Country, Name of
+Guest, Guest Phone, Contact Phone, Reference
+Search button Button Executes server-side query
+Clear button Button Resets all filters
+Show entries Dropdown
+(10/25/50/100)
+Controls pagination page size
+DataTable
+search input
+Text input Client-side real-time filter
+Results Grid DataTable (9
+columns)
+Registration No.(sortable) | Guest Name | Mobile | Company
+| Room Info | Check In | Check Out | Status | Action. Status
+column shows badge + CheckIn By/CheckOut By usernames.
+Status: In- Badge (blue) Active registration
+=== PAGE 24 ===
+House
+Status:
+Checked Out
+Badge (red) Completed registration
+Edit button
+(cyan)
+Button showFoRegGuestData(id) — loads into edit mode
+Re-activate
+button
+(orange)
+Button reactiveRegistration(id) — initiates manager-approval
+workflow
+Bill Preview
+(green)
+Anchor link /room-registration/bill-preview/{id}
+Split Bill
+Preview (cyan)
+Button openSplitBillModal(id, guestName)
+Registration
+Card (purple)
+Anchor link /room-registration/pre-registration-card/{id}
+5.7 Blank Registration Card UI Elements
+Element Type Behavior
+Hotel Letterhead Static print
+content
+Logo, name, address, hotline, website, email
+Print Date Auto-stamp DD/MM/YYYY HH:MM AM/PM at time of page
+open
+Blank Field Table Print table 30+ fields for manual handwriting
+"How did you find us?"
+checkboxes
+Print checkboxes Facebook / Website / Google / Others
+Terms and Conditions Static text Pre-printed hotel policy; key card fee BDT 500
+Guest Signature line Print element Manual signature
+Authorized Signature line Print element Staff countersignature
+5.8 Global UI Elements
+Element Type Behavior
+Check-in button Button (green,
+large)
+Global; outside all tab panes. Always visible. Triggers FR-
+013.
+Application Date Header display Current business date (05-03-2026)
+Real-time Clock Sidebar display HH:MM:SS live clock
+Hamburger
+menu
+Button Collapses/expands left sidebar
+Home icon Link Navigates to /dashboard/main_dashboard
+User display Header element Logged-in user name and avatar
+=== PAGE 25 ===
+6. BUSINESS RULES
+ID Rule Detail
+BR-
+001
+Mandatory Field
+Enforcement
+All fields marked * are mandatory. System must prevent Check-in
+and highlight offending fields across all tabs if any required field is
+empty.
+BR-
+002
+Date Sequence
+Validation
+Check-In Date must be strictly less than Departure Date. If equal or
+reversed, system displays a validation error and blocks registration.
+Total Nights auto-calculates as Departure Date minus Check-In Date
+in calendar days.
+BR-
+003
+Reservation Linkage
+(Conditional)
+The Reservation dropdown is only active when the Reservation
+checkbox is checked. Selecting a reservation auto-populates Check-
+In Date, Departure Date, and Total Nights. Auto-populated values
+may be overridden by the agent.
+BR-
+004
+Listed Company Fields
+(Conditional Display)
+Contact Person, Mobile Number, Payment Mode, and Pay For fields
+are hidden (display:none) by default. They become visible and
+editable only when the Listed Company checkbox is checked and a
+company is selected (CSS class: listed_company_required_fields).
+BR-
+005
+Room Number
+Assignment
+Room Number can only be selected via the Room List modal; it
+cannot be typed manually. The modal filters rooms by selected
+Room Type and current date range availability. Rooms with active
+In-House registrations for overlapping dates are excluded.
+BR-
+006
+Rate Calculation Logic Total Room Rent Amount = Rack Rate − Discount + Service Charge +
+VAT Amount + City Charge + Additional Charges. Fixed discount is
+subtracted as an absolute value; Percent discount is calculated as a
+percentage of Rack Rate. Discount Amount must not exceed Rack
+Rate.
+BR-
+007
+RRC Reverse Calculation When a target Total Room Rent Amount is entered in the RRC
+modal, the system reverse-calculates all selected charge
+components. Each component has an inclusion checkbox. Clicking
+Apply Rate pushes the back-calculated values to the main form
+fields.
+BR-
+008
+Per-Room Dates vs.
+Global Dates
+When "Same as global date" is checked (default), per-room Check-
+In and Departure dates are locked to and auto-sync with header
+dates. When unchecked, per-room dates are independently
+editable.
+BR-
+009
+Room Status Flags No Post suppresses automated nightly charge posting.
+Complimentary suppresses all room charges. House Use marks the
+room as internal hotel use. These flags are independent checkboxes
+but have mutually exclusive billing implications; business process
+must define conflict resolution if multiple are checked.
+BR-
+010
+Guest Count
+Enforcement
+(CONFIRMED)
+The total number of saved Guest Detail records must equal the sum
+of Adult (Per Room) counts across all room rows in the registration.
+This is enforced at Check-in. If counts do not match, Check-in is
+blocked with the message: "Guest records must match the declared
+adult count. Please complete Guest Details."
+BR- Country and Nationality Country defaults to "Bangladesh." Nationality defaults to
+=== PAGE 26 ===
+011 Defaults "Bangladeshi." Both are editable by the agent.
+BR-
+012
+Returning Guest Search The Search button on Guest Details queries the guest profile store
+by name and/or date of birth. A successful match pre-fills all form
+fields from the stored profile, avoiding duplicate data entry. Agent
+may override any pre-filled values.
+BR-
+013
+Blocked Guest Warning If a guest profile retrieved via the Search function has the Blocked
+Guest flag set, the system displays a prominent warning to the
+agent before any further action. The agent must explicitly
+acknowledge the warning to proceed. A management override may
+be required (to be confirmed in process documentation).
+BR-
+014
+Re-activate Registration
+(CONFIRMED)
+Re-activation requires: (1) Manager or Supervisor role
+credentials/approval code; (2) room availability revalidation (no
+overlapping In-House assignment); (3) date validity check within a
+configurable threshold. Front Desk Agents cannot approve re-
+activation. All checks must pass before status is restored to "In-
+House." The approving user's identity is captured in the audit log.
+BR-
+015
+Complimentary Item
+Defaults and Mandatory
+Items (CONFIRMED)
+Complimentary items are pre-checked based on the selected Meal
+Plan/Room Type package configuration. Items designated as
+mandatory in the package definition are rendered as HTML disabled
+checkboxes and cannot be deselected by the agent. A registration
+may have zero complimentary items if the selected package has no
+mandatory items and the agent deselects all optional items.
+BR-
+016
+Credit Card Optional
+(CONFIRMED)
+Credit card capture is not mandatory. Registrations may proceed
+without card data for cash-paying or company-billed guests. The
+Credit Card Information section contains no required (*) fields.
+BR-
+017
+Registration Number
+Auto-Generation
+On successful Check-in, the system auto-generates a Registration
+Number in the format RR + 8-digit zero-padded sequential integer
+(e.g., RR00002293). This number is immutable after creation and
+serves as the primary display identifier.
+BR-
+018
+Check-in Button Global
+Scope
+The Check-in button (id="check-in") is rendered outside all tab
+panes and is always visible. It executes cross-tab validation across
+all tabs regardless of which tab is currently active.
+BR-
+019
+PCI-DSS Credit Card
+Compliance
+(CONFIRMED)
+Raw credit card numbers are never stored in any database table, log
+file, or audit record. Card number input is masked on-screen
+(displaying last 4 digits only after entry). Raw card data is
+transmitted only to the PCI-DSS tokenization service over an
+encrypted TLS channel. The tokenization service returns a token,
+which is stored in the card_token field. Only card_last_four (4
+digits), card_type, card_holder_name, card_expiry_date, and
+card_reference are stored in plain form.
+BR-
+020
+Conditional Mandatory
+Fields for Booking Type
+(CONFIRMED)
+Meal Plan and Reference are mandatory ONLY for reservation-
+linked registrations (when a Reservation is selected). For walk-in
+registrations (no reservation linked), both fields are optional. The
+system must apply this conditional validation dynamically based on
+the registration type.
+BR-
+021
+Room Assignment
+Concurrency Control
+(CONFIRMED)
+When an agent selects a room from the Room List modal, the
+system acquires an optimistic concurrency lock (UUID token stored
+in concurrency_token field). If two agents attempt to check in the
+same room concurrently, only the first completed Check-in
+=== PAGE 27 ===
+transaction succeeds. The second agent receives: "Room [X] is no
+longer available. Please select a different room." The lock is
+released after successful commit or if the session is abandoned.
+BR-
+022
+Digital Channel
+Discovery Tracking
+(CONFIRMED/NEW)
+The field "How did you find out about our hotel?" is added as a
+digital checkbox group in the Others Information tab (options:
+Facebook / Website / Google / Others). This data is stored in the
+channel_discovery SET field and is available for marketing analytics
+reports and campaign attribution dashboards. The same field
+appears on the Blank Registration Card as a print checkbox for
+manual capture.
+BR-
+023
+Currency Defaulting Currency defaults to BDT with Conversion Rate 1.00. If a foreign
+currency is selected, the Conversion Rate must be non-zero. Walk-in
+guests using foreign currency must have a valid conversion rate
+configured in the currency master before registration can proceed.
+BR-
+024
+Audit Trail All registration events (create, edit, check-in, re-activation, check-
+out) must be logged with: User ID, Username, timestamp, action
+type, and Registration ID. The CheckIn By and CheckOut By
+usernames are displayed in the Search grid status column for
+operational audit visibility.
+7. NON-FUNCTIONAL REQUIREMENTS
+ID Category Requirement
+NFR-
+001
+Performance The Room Registration page must load within 3 seconds on a standard
+broadband connection. The Room List modal must populate available
+rooms within 2 seconds of selecting a Room Type. The Search tab
+must return results within 3 seconds for any filter combination across
+the full 2,291+ record dataset. DataTable client-side filtering must
+respond in under 500ms. The Check-in action must complete within 5
+seconds end-to-end including tokenization service call.
+NFR-
+002
+Security — PCI-DSS All credit card data must comply with PCI-DSS standards. Card
+numbers are tokenized via an approved tokenization service before
+persistence. Only the token, last 4 digits, card type, holder name,
+expiry, and reference are stored. No raw card number is written to
+databases, logs, or audit trails. The tokenization service connection
+must use TLS 1.2 or higher.
+NFR-
+003
+Security — CSRF All form submissions must include a valid CSRF token (csrf_test_name
+hidden field observed in DOM). The server must validate the CSRF
+token on every POST request.
+NFR-
+004
+Security — RBAC Access to Room Registration is restricted to authenticated users with
+the Front Office role. The Re-activate Registration action is restricted
+to Manager and Supervisor roles. Front Desk Agents must not be able
+to trigger re-activation. Role enforcement must be implemented
+server-side, not only in the UI.
+NFR-
+005
+Security — Data
+Privacy
+Sensitive guest data (passport number, visa number, National ID,
+driving license) must be masked or encrypted at rest. Guest document
+files must be stored in a secure, access-controlled file storage system.
+Guest document paths must not be publicly accessible via direct URL
+=== PAGE 28 ===
+without authentication.
+NFR-
+006
+Security — File
+Upload
+The Guest Document upload must validate: file type (JPEG, PNG, PDF
+only), maximum file size (to be defined by system configuration), and
+must scan for malware before storage. Uploaded files must be
+renamed to a server-generated UUID to prevent directory traversal
+attacks.
+NFR-
+007
+Usability Required fields must be clearly marked with an asterisk (*). Validation
+errors must be displayed inline adjacent to the offending field. Default
+values (Check-In Date = application date, Total Nights = 1, Country =
+Bangladesh, Currency = BDT, Adult = 1, Child = 0, Discount Amount =
+0) must reduce manual entry effort. The tab navigation must not
+enforce sequential completion. The Check-in button must use a
+visually distinct color (green) and be consistently visible across all tabs.
+NFR-
+008
+Usability — Date
+Format
+Date input fields must use a consistent format system-wide. A
+discrepancy exists between YYYY-MM-DD in form inputs and
+DD/MM/YYYY on the Blank Registration Card. Standardize to the
+hotel's configured locale format across all screens and documents.
+NFR-
+009
+Scalability The system must support concurrent registration sessions from
+multiple front desk terminals without data conflicts. Room availability
+checks and concurrency locks must be atomic to prevent race
+conditions. The DataTable in the Search tab must handle 10,000+
+records without degrading below the 3-second response target.
+NFR-
+010
+Concurrency Room assignment concurrency control must be implemented via
+optimistic locking (UUID token per room-registration attempt). The
+lock must be released automatically if the session is abandoned (e.g.,
+browser closed, session timeout) within a configurable timeout
+window (e.g., 10 minutes).
+NFR-
+011
+Audit Trail All registration events (create, edit, check-in, re-activate, check-out)
+must be logged immutably with User ID, Username, timestamp, action
+type, and registration ID. Logs must be retained for a minimum period
+as defined by hotel policy and applicable regulations.
+NFR-
+012
+Print/Export The Blank Registration Card and per-guest Registration Card must
+render correctly in browser print mode (Ctrl+P) with appropriate
+margins and page breaks. Bill Preview and Registration Card links must
+render within 2 seconds. CSS must include print-optimized styles
+(@media print).
+NFR-
+013
+Browser
+Compatibility
+The module must function correctly on the latest versions of Chrome,
+Firefox, Edge, and Safari. Time pickers and date pickers must work
+cross-browser without polyfills.
+NFR-
+014
+Internationalization The Currency master supports multiple currencies with conversion
+rates. The Airline master contains 65 international airlines. The
+Country master supports international country selection. Date formats
+and number formats should respect the hotel's locale configuration.
+8. GAPS & RECOMMENDATIONS
+ID Status Gap / Issue Recommendation
+=== PAGE 29 ===
+GAP-
+001
+OPEN Walk-in guests (no company)
+have no Payment Mode field
+visible on the Registration tab,
+as Payment Mode is conditional
+on Listed Company selection.
+Add a standalone "Payment Method"
+field at the top-level header section (e.g.,
+Cash / Credit Card / Company / Other)
+for all registration types. The existing
+conditional Payment Mode for company
+bookings can remain as-is for corporate
+billing detail.
+GAP-
+002
+OPEN No explicit "Walk-in" flag or
+designation on the registration
+record beyond the absence of a
+reservation link.
+Persist the is_walk_in boolean field
+(already added to data model) and
+expose it as a visible indicator in the
+Search grid Status/Type column to
+distinguish walk-in registrations from
+reservation-linked ones for reporting
+purposes.
+GAP-
+003
+OPEN Profession dropdown has only 3
+options (DR, EN, Other), which is
+insufficient for a hospitality
+system serving diverse business
+travelers.
+Expand the Profession master to include
+at least: Business Executive, Government
+Official, NGO Worker, Military Personnel,
+Student, Academic/Researcher,
+Diplomat, Healthcare Professional, Legal
+Professional, Retired, Tourist, Other.
+Make the master table configurable by
+hotel administrators.
+GAP-
+004
+OPEN Date format inconsistency: form
+inputs use YYYY-MM-DD while
+the Blank Registration Card
+displays DD/MM/YYYY. This may
+cause confusion for agents and
+guests.
+Standardize all date displays and inputs
+to DD/MM/YYYY (or the hotel's
+configured locale format) system-wide,
+including form inputs, grids, printed
+documents, and API responses.
+GAP-
+005
+CLOSED
+(CONFIRMED)
+Re-activate Registration
+required a clear business rule
+definition.
+RESOLVED: Re-activation requires
+Manager/Supervisor approval, room
+availability revalidation, and date validity
+check. Documented in BR-014 and FR-
+015.
+GAP-
+006
+CLOSED
+(CONFIRMED)
+Guest count vs. guest records
+enforcement was undefined.
+RESOLVED: Guest count is enforced at
+Check-in. Guest records must equal
+declared adult count. Documented in BR-
+010 and FR-013.
+GAP-
+007
+CLOSED
+(CONFIRMED)
+"How did you find us?" existed
+only on the print Blank
+Registration Card.
+RESOLVED: Field added digitally to
+Others Information tab (FR-010, BR-022).
+Stored in channel_discovery SET field for
+analytics.
+GAP-
+008
+CLOSED
+(CONFIRMED)
+Credit card PCI-DSS compliance
+requirements were undefined.
+RESOLVED: Full PCI-DSS tokenization
+flow documented in FR-012 and BR-019.
+Raw card numbers never stored.
+GAP-
+009
+CLOSED
+(CONFIRMED)
+Complimentary items
+mandatory/optional rules were
+undefined.
+RESOLVED: Package-mandatory items
+cannot be deselected (disabled
+checkboxes). Zero items permitted for
+packages with no mandatory items.
+Documented in FR-009 and BR-015.
+GAP- CLOSED Room assignment concurrency RESOLVED: Optimistic locking with UUID
+=== PAGE 30 ===
+010 (CONFIRMED) was undefined. token. Only first completed transaction
+succeeds. Documented in BR-021 and
+FR-013.
+GAP-
+011
+OPEN No photo capture for guest
+identity verification at check-in.
+Consider adding a webcam photo
+capture option alongside the Guest
+Document file upload to enable real-
+time identity verification at the front
+desk (common in enterprise hotel
+systems).
+GAP-
+012
+OPEN After uploading a Guest
+Document, there is no visible
+confirmation, filename display,
+or preview link shown to the
+agent.
+Display the uploaded filename and a
+preview/download link adjacent to the
+file upload button after a successful
+upload. Allow deletion and re-upload if
+an incorrect file is attached.
+GAP-
+013
+OPEN Split Bill Preview functionality is
+accessible from the Search grid
+but the configuration
+mechanism during or after
+registration is not documented.
+Document the Split Bill modal fields,
+rules (how charges are split, by
+guest/room/amount), and the point in
+the process at which split billing is
+configured. Add to functional
+requirements if split billing setup occurs
+during registration.
+GAP-
+014
+OPEN No explicit "Walk-in" checkbox
+or indicator during registration,
+and no system notification if an
+agent attempts Check-in
+without completing the Guest
+Details tab (guest count = 0).
+The guest count enforcement (BR-010)
+covers the zero-guest scenario. Ensure
+the error message is specific and
+actionable: "No guest records found.
+Please add at least [X] adult guest
+record(s) before checking in."
+GAP-
+015
+OPEN Concurrency lock timeout
+behavior is undefined. If an
+agent opens Room List, selects a
+room, but does not complete
+Check-in (e.g., browser crash,
+session timeout), the lock could
+remain indefinitely.
+Implement an automatic lock expiry
+(e.g., 10-minute inactivity timeout).
+Released locks must immediately
+become available in the Room List modal
+for other agents.
+9. ACCEPTANCE CRITERIA
+All criteria use Given/When/Then format. Each criterion must pass for the module to be
+considered ready for production.
+AC-001 — New Walk-in Registration (End-to-End)
+Given a front desk agent is authenticated and on the Room Registration page with no
+reservation linked
+When the agent fills Check-In Date, Departure Date, selects a Room Type, selects a Room
+Number via Room List, enters Adult count = 1, selects Meal Plan (optional for walk-in), adds
+at least 1 Guest Detail record (Title + First Name + Full Guest Name + Country), and clicks
+Check-in
+Then the system generates a Registration Number (format: RR########), sets status to "In-
+=== PAGE 31 ===
+House," the room status updates to "Occupied" in Room Inventory, the guest billing account
+is opened, and the record appears in the Search tab with a blue "In-House" badge.
+AC-002 — Reservation-Linked Registration (Conditional Mandatory
+Fields)
+Given a pending reservation exists (e.g., GR00001252)
+When the agent checks the Reservation checkbox, selects the reservation, and Meal Plan
+and Reference are NOT selected
+Then Check-in is blocked with validation errors on Meal Plan and Reference fields
+When the agent selects both Meal Plan and Reference and completes all other required
+fields
+Then Check-in succeeds and the registration is linked to the reservation record.
+AC-003 — Walk-in Registration: Meal Plan and Reference Optional
+Given the agent is creating a walk-in registration (Reservation checkbox unchecked)
+When the agent completes all truly required fields but leaves Meal Plan and Reference
+unselected
+Then Check-in succeeds without validation errors on those fields. No error is raised for
+missing Meal Plan or Reference on walk-in registrations.
+AC-004 — Listed Company Conditional Fields
+Given the agent is on the Registration tab
+When the Listed Company checkbox is unchecked
+Then Contact Person, Mobile Number, Payment Mode, and Pay For fields are NOT visible in
+the UI
+When the Listed Company checkbox is checked and a company is selected
+Then all four fields become visible and editable, and the company name appears in the
+Listed Company dropdown.
+AC-005 — Guest Count Enforcement
+Given the Registration tab has 2 rooms with Adult count = 2 and Adult count = 1 (total adults
+= 3)
+When the agent adds only 2 Guest Detail records and clicks Check-in
+Then Check-in is blocked with the message: "Guest records must match the declared adult
+count. Please complete Guest Details."
+When the agent adds the third Guest Detail record and clicks Check-in again
+Then Check-in succeeds (assuming all other validations pass).
+AC-006 — Rate Recalculation (RRC Modal)
+Given the agent has selected a room with Rack Rate, Service Charge, VAT, City Charge, and
+Additional Charges configured
+When the agent clicks RRC, enters a target Total Room Rent Amount, selects all charge
+component checkboxes, and clicks Apply Rate
+Then the system back-calculates all individual charge components so that their sum equals
+=== PAGE 32 ===
+the entered Total Room Rent Amount, and all form fields are updated with the back-
+calculated values.
+AC-007 — Per-Room Date Override
+Given the "Same as global date" checkbox is checked (default) and the header Check-In Date
+is 2026-03-05
+When the agent changes the header Departure Date to 2026-03-10
+Then the per-room Departure Date auto-updates to 2026-03-10 and Number of Night
+recalculates to 5
+When the agent unchecks "Same as global date"
+Then the per-room dates become independently editable and do not sync with further
+header date changes.
+AC-008 — Returning Guest Search and Pre-fill
+Given a guest named "John Smith" with Date of Birth 01/01/1985 exists in the guest profile
+store
+When the agent enters "John Smith" in the Guest Details search and clicks Search
+Then all form fields (Title, First Name, Last Name, Full Guest Name, DOB, Email, Phone,
+Address, Passport, Visa, etc.) are pre-filled from the stored profile. The agent may modify
+any pre-filled value before clicking Add.
+AC-009 — Blocked Guest Warning
+Given a guest profile has the Blocked Guest flag set to TRUE
+When an agent retrieves this profile via the Guest Details Search function
+Then a prominent warning alert is displayed to the agent before any further form action is
+permitted. The agent must explicitly acknowledge the warning. The form fields are pre-filled
+but the agent cannot proceed silently.
+AC-010 — Complimentary Items: Package-Mandatory Cannot Be
+Deselected
+Given the selected Meal Plan defines "Wi-Fi Internet Access" as a mandatory complimentary
+item
+When the agent navigates to the Complimentary Item tab
+Then "Wi-Fi Internet Access" checkbox is pre-checked and rendered as HTML disabled (non-
+interactive). The agent cannot uncheck it.
+When the agent clicks "Select All" to deselect all items
+Then only non-mandatory items are deselected. "Wi-Fi Internet Access" remains checked.
+AC-011 — Zero Complimentary Items (No Mandatory Package)
+Given the selected Meal Plan has no mandatory complimentary items defined
+When the agent navigates to the Complimentary Item tab and deselects all pre-checked
+items (or none are pre-checked)
+Then the registration proceeds to Check-in with zero complimentary items. No validation
+error is raised for having no complimentary items selected.
+=== PAGE 33 ===
+AC-012 — Credit Card Data Masking and Tokenization
+Given the agent is on the Others Information tab, Credit Card Information section
+When the agent types a full 16-digit card number
+Then the card number field masks the input and displays only the last 4 digits (e.g., ****
+**** **** 1234) after the field loses focus
+When the agent clicks Check-in and the registration is committed
+Then no raw card number exists in any database table, audit log, or server log. Only the
+tokenization service token and last 4 digits are stored.
+AC-013 — Room Concurrency Conflict
+Given Agent A and Agent B both open the Room List modal for the same Room Type and
+select the same Room Number simultaneously
+When Agent A completes Check-in first (commits the transaction)
+Then Agent A's registration succeeds and the room status is set to "Occupied"
+When Agent B subsequently attempts Check-in
+Then Agent B receives the error: "Room [X] is no longer available. Please select a different
+room." Agent B must return to the Room List modal to select a different room. Agent B's
+session is not lost; all other form data is preserved.
+AC-014 — Re-activate Registration (Manager Approval)
+Given a registration has status "Checked Out" and the room is currently unoccupied
+When a Front Desk Agent clicks Re-activate Registration
+Then the system blocks the action with: "You do not have permission to re-activate
+registrations."
+When a Manager/Supervisor clicks Re-activate Registration, provides valid
+credentials/approval code, and the room is available
+Then the registration status is set back to "In-House," the room is marked "Occupied," and
+an audit log entry is created capturing the approving manager's identity and timestamp.
+AC-015 — Re-activate Registration (Room Conflict)
+Given a Checked-Out registration exists for Room 1102 and Room 1102 is currently
+"Occupied" by another In-House registration
+When a Manager attempts to re-activate the Checked-Out registration
+Then the system blocks re-activation with: "Room [1102] is currently occupied by another
+guest. Please assign an alternative room before re-activating." The original registration
+remains Checked Out.
+AC-016 — Search Tab: Multi-Filter Search
+Given multiple registration records exist in the system
+When the agent enters a Guest Name filter value and selects a Country filter and clicks
+Search
+Then the results grid displays only records matching both criteria. The pagination footer
+shows the correct count (e.g., "Showing 1 to 5 of 5 entries").
+When the agent clicks Clear
+Then all filters reset and the full unfiltered list is displayed.
+=== PAGE 34 ===
+AC-017 — Search Grid Action: Bill Preview
+Given a registration record exists in the Search grid
+When the agent clicks the Bill Preview (green) link for that record
+Then a new browser tab opens rendering the guest's bill at URL /front_office/room-
+registration/bill-preview/{id} within 2 seconds.
+AC-018 — Search Grid Action: Registration Card
+Given a registration record exists in the Search grid
+When the agent clicks the Registration Card (purple) link
+Then a new browser tab opens with the pre-filled registration card at /front_office/room-
+registration/pre-registration-card/{id} ready for printing.
+AC-019 — Blank Registration Card
+Given the agent is on the Room Registration screen
+When the agent clicks the Blank Registration Card button
+Then a new browser tab opens with a blank, printable registration card showing: Cubix HMS
+hotel letterhead, current Print Date/Time, 30+ blank field labels (all empty), "How did you
+find us?" print checkboxes, Terms and Conditions text, and Guest/Authorized Signature lines.
+No guest data is pre-filled.
+AC-020 — Digital "How did you find us?" Channel Tracking
+Given the agent is on the Others Information tab
+When the agent checks "Facebook" and "Google" in the "How did you find out about our
+hotel?" checkbox group and the registration is completed via Check-in
+Then the channel_discovery field in the OthersInformation database record stores
+{'Facebook','Google'}, and this data is retrievable for marketing channel analytics reporting.

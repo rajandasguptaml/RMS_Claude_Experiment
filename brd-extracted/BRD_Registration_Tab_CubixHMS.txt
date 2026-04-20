@@ -1,0 +1,2470 @@
+BUSINESS REQUIREMENTS DOCUMENT
+Registration Tab Module
+Cubix Hotel Management System (HMS)
+Front Office Module | Room Registration | Registration Tab (Tab 1)
+Field
+Value
+Document Title
+BRD – Registration Tab (Room Registration Module)
+System
+Cubix HMS v13.1.0
+Module Path
+Front Office > Room Registration > Registration (Tab 1)
+Version
+1.0
+Prepared Date
+April 13, 2026
+Status
+Draft
+Prepared For
+Product / Development / QA Team
+Application URL
+https://demo.cubixsmb.com/front_office/new-room-registration
+1. Executive Summary
+This Business Requirements Document (BRD) defines the detailed functional, data, UI, and business requirements for the Registration Tab — the first and primary tab within the Room Registration workflow of the Front Office module in Cubix HMS (Hotel Management System).
+The Registration Tab is the entry point for all guest check-in activities in the hotel. It is the most data-intensive tab in the Room Registration wizard, responsible for capturing every critical piece of room assignment and billing information required to register a guest — whether the guest is a walk-in, linked to an existing reservation, or an in-house guest having their stay modified.
+The tab is organized into three major functional sections: (1) the Room Registration Header section capturing booking-level metadata, (2) the Room Detailed Information section capturing per-room financial and stay details, and (3) the Additional Service section capturing supplementary services. Together, these sections drive the creation of a complete room registration record, enable room inventory management, and set up the financial parameters for the guest folio.
+Scope of this BRD:
+•  Module: Registration Tab (Tab 1 of Room Registration)
+•  Parent System: Cubix HMS – Front Office
+•  Primary Users: Front Desk Agents, Reservation Agents, Duty Managers, Night Auditors
+•  Trigger: Walk-in guest check-in or reservation-linked room assignment
+•  Output: Room registration record with room assignment, billing parameters, and supplementary service data saved to the HMS database
+Business Objective:
+To enable hotel front-desk staff to efficiently, accurately, and completely capture all room registration details — including room assignment, rate configuration, billing flags, occupancy, additional services, and stay metadata — in a single, guided interface that drives all downstream hotel operations including housekeeping, billing, night audit, and reporting.
+2. Module Context & Positioning
+The Registration Tab does not function as a standalone module. It is Tab 1 of 5 within the Room Registration wizard — the core operational workflow of the Front Office module in Cubix HMS. Data entered on this tab is the foundational dataset for all subsequent tabs and all downstream hotel operations.
+2.1 Parent Module
+Attribute
+Detail
+Parent Module Name
+Room Registration
+Navigation Path
+Front Office > Room Registration
+URL
+https://demo.cubixsmb.com/front_office/new-room-registration
+Purpose
+To register a guest (walk-in or reservation-linked) into a room, collect all billing, personal, and service details, and complete check-in.
+Tab Position
+Tab 1 of 5 (Registration | Guest Details | Complimentary Item | Others Information | Search)
+Primary CTA
+Check-In button (persists all tab data and creates the active registration record)
+Secondary CTA
+Update Registration button (for existing checked-in records)
+Access Method
+Left sidebar: Front Office > Room Registration; or direct URL
+2.2 Sibling Modules
+The Registration Tab is the first of five sibling tabs within the Room Registration wizard. The table below describes each sibling and its relationship to the Registration Tab:
+Tab #
+Tab Name
+Purpose
+Relationship to Registration Tab
+1
+Registration
+Core room assignment, rate, billing flags, additional services, stay metadata
+This tab — the primary data input; provides room, rate, dates, and billing context to all other tabs
+2
+Guest Details
+Captures guest personal profile: name, contact, nationality, ID, passport, address, family/group info
+Receives the room number and occupancy count (adults/children) from Tab 1; links the guest to the registration record created here
+3
+Complimentary Item
+Assigns no-charge complimentary services (amenities) to the room registration
+The Complimentary and House Use flags set in Tab 1 determine the stay type and influence complimentary item rules in Tab 3
+4
+Others Information
+Captures travel context, VIP flag, airport drop, credit card info, Complimentary Guest, Room Owner
+The Complimentary Guest and House Use fields in Tab 4 complement the Complimentary/House Use flags in Tab 1
+5
+Search
+Look up existing room registrations for reference or modification
+References registration records whose core data originates from Tab 1
+2.3 Dependencies
+Upstream Dependencies (what the Registration Tab depends on):
+Dependency
+Source
+Requirement
+User Authentication
+HMS Auth / Session
+Staff must be logged in with an active, valid session before accessing the Registration Tab
+Role-Based Access
+HMS RBAC Configuration
+Only users with appropriate Front Office roles (e.g., Front Desk Agent, Reservation Agent, Duty Manager) can access and submit the Registration Tab
+Room Inventory & Type Master
+HMS Room Configuration
+Room Types dropdown is populated from the active room type master; Room List modal is powered by real-time room inventory availability
+Rate & Pricing Master
+HMS Rate Configuration
+Rack Rate, Service Charge %, VAT %, City Charge values are fetched from the rate plan master based on room type and stay dates
+Currency Master
+HMS Finance Configuration
+Currency Name dropdown is populated from the currency master; default currency (BDT) and conversion rate (1.00) are system defaults
+Listed Company Master
+HMS Company Configuration
+Listed Company dropdown is populated from the corporate company master maintained in HMS back-office
+Additional Service Master
+HMS Service Configuration
+Service Name dropdown in the Additional Service section is populated from the HMS service charge master list
+Market Segment Master
+HMS Sales Configuration
+Market Segment dropdown options (Dhaka Office, Cox's Office) are from the HMS market segment configuration
+Guest Source Master
+HMS Marketing Configuration
+Guest Source dropdown options (Web Site, Marketing, Other Source, Broker) are from the HMS source master
+Meal Plan Master
+HMS F&B Configuration
+Meal Plan dropdown options are from the HMS meal plan master (BED ONLY, BED & BREAKFAST, etc.)
+Reference Master
+HMS Front Office Configuration
+Reference dropdown options (Front Office, Sales Team, booking portals, etc.) are from the HMS reference master
+Reservation Records (Optional)
+Room Reservation Module
+If the stay is linked to a reservation, the Reservation dropdown fetches active reservations; selecting one pre-populates dates, room type, rate, and other data
+Application Date
+HMS System Date
+The application date (e.g., 05-03-2026) is displayed in the header and used as the default Check-In Date; it controls night audit cycles and date validations
+Downstream Dependencies (what depends on Registration Tab data):
+Downstream Consumer
+Dependency
+Guest Details Tab (Tab 2)
+Room Number and Occupancy (Adult/Child counts) from Tab 1 are used to set up per-room guest profile entries
+Complimentary Item Tab (Tab 3)
+Complimentary and House Use flags from Tab 1 govern the stay type and complimentary item assignment rules
+Others Information Tab (Tab 4)
+Billing context (No Post, Complimentary) from Tab 1 affects folio behavior captured in Tab 4
+Check-In Record
+All fields from Tab 1 are included in the Check-In API payload; the registration record is created from Tab 1 data
+Room Inventory
+Room Number selection in Tab 1 marks the room as Occupied in the real-time room inventory upon check-in
+Guest Folio / Billing
+Total Room Rent Amount, Service Charge, VAT, City Charge, Additional Charges, Negotiated Rate, and Additional Service amounts from Tab 1 initialize the guest folio charges
+Night Audit
+Check-In Date, Departure Date, Total Nights, No Post flag, and billing parameters from Tab 1 drive night audit auto-posting and room revenue accounting
+Housekeeping
+Room Number and occupancy (Adult/Child) from Tab 1 trigger housekeeping room assignment and turndown service scheduling
+Reports
+Registration data (room type, rate, dates, company, market segment, guest source, meal plan, reference) flows into all Front Office operational and revenue reports
+Room Calendar
+Room Number and stay dates from Tab 1 update the Room Calendar occupancy display
+Blank Registration Card
+Registration data from Tab 1 (room, dates, rate, company, remarks) is used to generate the Blank Registration Card printout
+Bill Transfer
+Registration ID from Tab 1 is required for bill transfer operations between rooms or to company accounts
+3. Functional Requirements
+This section details every actionable process, user interaction, system behavior, and data flow requirement on the Registration Tab.
+3.1 Page Access & Tab Navigation
+Req ID
+Requirement Description
+Priority
+FR-NAV-01
+The Registration Tab shall be the default active tab when the Room Registration page loads.
+Must Have
+FR-NAV-02
+The user shall be able to navigate to the Registration Tab by clicking the "Registration" tab button in the navigation bar from any other tab.
+Must Have
+FR-NAV-03
+The "Next" button on the Registration Tab shall navigate the user to the Guest Details tab (Tab 2) without losing any data entered on Tab 1.
+Must Have
+FR-NAV-04
+All data entered on the Registration Tab shall be retained in the current session when the user navigates to other tabs and returns.
+Must Have
+FR-NAV-05
+The "Blank Registration Card" button shall always be accessible from the Registration Tab and shall open the blank registration card in a new browser tab.
+Must Have
+FR-NAV-06
+The Check-In button shall be persistently visible at the bottom of the page from the Registration Tab, allowing staff to initiate check-in at any step.
+Must Have
+FR-NAV-07
+When the Check-In button is clicked from the Registration Tab, all tab data across all five tabs shall be validated and submitted.
+Must Have
+3.2 Section A: Room Registration Header — Reservation Linkage
+This section documents the requirements for the global reservation linking and booking-level fields visible in the "Room Registration" panel at the top of the tab.
+3.2.1 Réservation Checkbox & Dropdown
+Req ID
+Requirement Description
+Priority
+FR-RES-01
+A toggle checkbox shall be displayed adjacent to the Reservation drop-down. When unchecked (default), the Reservation drop-down shall be disabled — this represents a walk-in registration.
+Must Have
+FR-RES-02
+When the Reservation checkbox is checked by the user, the Reservation dropdown shall be enabled and the user may select an existing active reservation.
+Must Have
+FR-RES-03
+The Reservation dropdown shall be populated with all active, pending reservations for the current property (format: Reservation No. – Guest Name & Source, e.g., "GR00001252 - Mr. Sadman Dhaka Sales").
+Must Have
+FR-RES-04
+Upon selecting a reservation from the dropdown, the system shall auto-populate relevant fields including Check-In Date, Departure Date, Room Type, Rack Rate, Currency, Conversion Rate, and any pre-configured complementary items.
+Must Have
+FR-RES-05
+If the selected reservation has multiple rooms, the Room Detailed Information section shall allow adding each room individually.
+Must Have
+FR-RES-06
+The system shall store reservation_id as a hidden field (fo_from_reservation) to track whether the registration is walk-in (value: 0) or reservation-linked (value: reservation_id).
+Must Have
+3.2.2 Check-In Date
+Req ID
+Requirement Description
+Priority
+FR-CID-01
+The Check-In Date field shall be pre-populated with the current application date (e.g., 2026-03-05) on page load.
+Must Have
+FR-CID-02
+The Check-In Date field shall be read-only (not directly editable) and shall only change via the application date or reservation selection.
+Must Have
+FR-CID-03
+The Check-In Date format shall be YYYY-MM-DD.
+Must Have
+FR-CID-04
+The Check-In Date shall be used as the default Service From Date in the Additional Service section.
+Must Have
+3.2.3 Check-In Time
+Req ID
+Requirement Description
+Priority
+FR-CIT-01
+The Check-In Time field shall be editable and shall default to 02:00 PM (14:00:00) on page load.
+Must Have
+FR-CIT-02
+The Check-In Time shall be a time-picker input (type="time") displaying in 12-hour AM/PM format on the UI.
+Must Have
+FR-CIT-03
+The Check-In Time shall be stored in 24-hour format internally (e.g., 14:00:00).
+Must Have
+3.2.4 Departure Date
+Req ID
+Requirement Description
+Priority
+FR-DD-01
+The Departure Date field shall default to the day following the Check-In Date (Check-In Date + 1 night).
+Must Have
+FR-DD-02
+The Departure Date field shall be disabled (not directly editable at the header level); it is derived from the room-level dates in the Room Detailed Information section or from the reservation.
+Must Have
+FR-DD-03
+The Departure Date must always be greater than the Check-In Date; the system shall enforce this validation.
+Must Have
+FR-DD-04
+The Departure Date format shall be YYYY-MM-DD.
+Must Have
+3.2.5 Checkout Time
+Req ID
+Requirement Description
+Priority
+FR-COT-01
+The Checkout Time field shall default to 12:00 PM (noon) on page load.
+Must Have
+FR-COT-02
+The Checkout Time field shall be disabled at the header level; it may be configured via system settings.
+Should Have
+3.2.6 Total Nights
+Req ID
+Requirement Description
+Priority
+FR-TN-01
+The Total Nights field shall be auto-calculated as the difference between the global Departure Date and Check-In Date (in days).
+Must Have
+FR-TN-02
+The Total Nights field shall be read-only; it is derived from the date fields.
+Must Have
+FR-TN-03
+A manual override checkbox (Checkout checkbox) adjacent to the Total Nights field shall allow authorized users to override the auto-calculated value.
+Should Have
+3.2.7 Listed Company
+Req ID
+Requirement Description
+Priority
+FR-LC-01
+A toggle checkbox shall control whether the Listed Company dropdown is enabled. When unchecked (default), the dropdown is disabled — representing an individual guest stay.
+Must Have
+FR-LC-02
+When the Listed Company checkbox is checked, the dropdown shall be enabled and the user may select a corporate company. The selected company will be billed for the room.
+Must Have
+FR-LC-03
+The Listed Company dropdown shall be populated with all active corporate companies from the HMS company master (examples: Sea Side Traders, NUVISTA PHARMA, Ardent Marine Ltd., etc.).
+Must Have
+FR-LC-04
+Upon selecting a company, additional fields — Contact Person, Mobile Number, Payment Mode, and Pay For — shall become available/enabled for the company booking context.
+Must Have
+FR-LC-05
+Contact Person: Free-text field for the name of the corporate contact person (placeholder: "Contact Person").
+Must Have
+FR-LC-06
+Mobile Number: Free-text field for the corporate contact mobile number (placeholder: "Mobile Number").
+Must Have
+FR-LC-07
+Payment Mode: Dropdown with options: Self | Company | Before C/O (Company/Host). Determines who pays for the stay.
+Must Have
+FR-LC-08
+Pay For: Dropdown with options: Room Only | Room and Food | Room, Food and Laundry | Everything including hard drink and mini bar | Everything without. Determines the scope of company-covered charges.
+Must Have
+3.2.8 Currency Name & Conversion Rate
+Req ID
+Requirement Description
+Priority
+FR-CUR-01
+The Currency Name dropdown shall default to BDT (Bangladeshi Taka) on page load.
+Must Have
+FR-CUR-02
+The Currency Name dropdown shall be populated with all active currencies configured in the HMS system.
+Must Have
+FR-CUR-03
+The Conversion Rate field shall be auto-populated based on the selected currency (default 1.00 for BDT).
+Must Have
+FR-CUR-04
+The Conversion Rate field shall be read-only and driven by the currency master configuration.
+Must Have
+FR-CUR-05
+Changing the Currency Name shall recalculate all monetary amounts using the new conversion rate.
+Must Have
+3.3 Section B: Room Detailed Information
+This section documents requirements for the "Room Detailed Information" card, which captures per-room assignment, rate, and billing details. The system supports adding multiple rooms in a single registration.
+3.3.1 Room Types
+Req ID
+Requirement Description
+Priority
+FR-RT-01
+The Room Types dropdown shall be populated with all active room types configured for the property.
+Must Have
+FR-RT-02
+Selecting a Room Type shall trigger a system call to fetch the applicable Rack Rate, Service Charge, VAT Amount, City Charge, and Additional Charges for that room type based on the current rate plan.
+Must Have
+FR-RT-03
+Selecting a Room Type shall also update the Room List modal data, filtering available rooms by the selected type.
+Must Have
+FR-RT-04
+Room Types dropdown is mandatory before the Room List modal can be opened or a Room Number can be assigned.
+Must Have
+3.3.2 Adult (Per Room) & Child (Per Room)
+Req ID
+Requirement Description
+Priority
+FR-OCC-01
+Adult (Per Room): A numeric input field (ID: roomPax, name: pax_in) with a default value of 1. This field is REQUIRED (HTML required attribute set). Minimum value: 1.
+Must Have
+FR-OCC-02
+Child (Per Room): A numeric input field (ID: roomChild, name: child_in) with a default value of 0. Optional field. Minimum value: 0.
+Must Have
+FR-OCC-03
+Adult and Child counts shall be passed to the Guest Details tab to set up the appropriate number of guest profile entries.
+Must Have
+3.3.3 Room List Button & Room Selection Modal
+Req ID
+Requirement Description
+Priority
+FR-RL-01
+A "Room List" button shall be displayed adjacent to the Child (Per Room) field. Clicking it opens the Room Selection modal.
+Must Have
+FR-RL-02
+The Room List modal shall display all available (vacant) rooms filtered by the selected Room Type.
+Must Have
+FR-RL-03
+The Room List modal shall contain a table with columns: Select (radio/checkbox) and Room Number.
+Must Have
+FR-RL-04
+The user selects a room from the list and confirms (OK button). The selected Room Number is auto-populated into the Room Number field and the modal closes.
+Must Have
+FR-RL-05
+If the user clicks Cancel in the modal, no room is selected and the modal closes without changes.
+Must Have
+FR-RL-06
+Rooms already occupied or under maintenance shall not appear in the Room List modal.
+Must Have
+FR-RL-07
+The Room Number field shall become read-only after selection from the Room List modal (user cannot type directly).
+Must Have
+3.3.4 Room Number
+Req ID
+Requirement Description
+Priority
+FR-RN-01
+The Room Number field (ID: fo_reg_room_number, name: room_number) shall be read-only (readOnly=true) and shall only be populated via the Room List modal selection.
+Must Have
+FR-RN-02
+Room Number is a required field before the registration can be submitted.
+Must Have
+FR-RN-03
+Once a Room Number is assigned via the modal, the hidden field room_number shall also be updated.
+Must Have
+3.3.5 Rack Rate
+Req ID
+Requirement Description
+Priority
+FR-RR-01
+The Rack Rate field (ID: roomRackRate, name: rack_rate) shall be auto-populated when a Room Type is selected, based on the applicable rate plan.
+Must Have
+FR-RR-02
+The Rack Rate field shall be read-only (auto-fetched from rate master).
+Must Have
+FR-RR-03
+The Rack Rate is the base nightly room rate before any discounts or additional charges.
+Must Have
+3.3.6 Discount Type & Discount Amount
+Req ID
+Requirement Description
+Priority
+FR-DT-01
+Discount Type (ID: fo_reg_discountType, name: discount_type): Dropdown with two options — Fixed (value: 1) and Percent (value: 2). Default: Fixed.
+Must Have
+FR-DT-02
+Discount Amount (ID: fo_reg_discountedAccount, name: discount_amount): Numeric input. Default value: 0.
+Must Have
+FR-DT-03
+When Discount Type is "Fixed", the Discount Amount is deducted directly from the Rack Rate in monetary units.
+Must Have
+FR-DT-04
+When Discount Type is "Percent", the Discount Amount is treated as a percentage (%) of the Rack Rate.
+Must Have
+FR-DT-05
+The discount shall reduce the Negotiated Rate or the base for charge calculations. The system shall enforce that the Discount Amount does not exceed the Rack Rate when type is Fixed.
+Must Have
+3.3.7 Negotiated Rate
+Req ID
+Requirement Description
+Priority
+FR-NR-01
+Negotiated Rate (ID: fo_reg_negotiatedRate, name: negotiated_rate): An optional numeric field where staff may enter a manually agreed room rate.
+Must Have
+FR-NR-02
+If a Negotiated Rate is entered, it shall override the Rack Rate for billing calculations.
+Must Have
+FR-NR-03
+The Negotiated Rate field is typically used for corporate rate agreements or special management-approved rates.
+Must Have
+3.3.8 Service Charge, VAT Amount, City Charge, Additional Charges
+These four charge fields follow the same pattern — each has a numeric input and an associated "apply" checkbox.
+Req ID
+Requirement Description
+Priority
+FR-SC-01
+Service Charge (ID: fo_reg_serviceCharge, name: service_charge): Auto-populated at 10% (system default from service_charges_db hidden field). Field is disabled (auto-calculated). Required field (marked with *).
+Must Have
+FR-SC-02
+Service Charge Checkbox (ID: fo_reg_serviceChargeCheckbox): When checked (default), Service Charge is applied to the billing. When unchecked, Service Charge is waived for this room.
+Must Have
+FR-SC-03
+VAT Amount (ID: fo_reg_vatAmount, name: vat_amount): Auto-populated at 15% (system default from vat_charges_db hidden field). Field is disabled (auto-calculated). Required field.
+Must Have
+FR-SC-04
+VAT Checkbox (ID: fo_reg_vatAmountCheckbox): When checked (default), VAT is applied. When unchecked, VAT is waived.
+Must Have
+FR-SC-05
+City Charge (ID: fo_reg_cityCharge, name: city_charge): Auto-populated from rate configuration. Disabled field. Required field.
+Must Have
+FR-SC-06
+City Charge Checkbox (ID: fo_reg_cityChargeCheckbox): When checked (default), City Charge is applied. When unchecked, City Charge is waived.
+Must Have
+FR-SC-07
+Additional Charges (ID: fo_reg_additionalCharge, name: additional_charge): Auto-populated from rate configuration. Disabled field. Required field.
+Must Have
+FR-SC-08
+Additional Charges Checkbox (ID: fo_reg_additonalChargesCheckbox): When checked (default), Additional Charges are applied. When unchecked, they are waived.
+Must Have
+FR-SC-09
+All four charge fields shall be automatically recalculated whenever the Rack Rate, Discount Type, or Discount Amount changes.
+Must Have
+3.3.9 Total Room Rent Amount & RRC (Room Rate Calculator)
+Req ID
+Requirement Description
+Priority
+FR-TRA-01
+Total Room Rent Amount (ID: fo_reg_total_room_rent, name: total_room_rate): The auto-calculated total nightly room charge including all applicable charges. Disabled (read-only, auto-calculated). Required field.
+Must Have
+FR-TRA-02
+The RRC (Room Rate Calculator) button shall open a modal dialog titled "Calculate Room Rate Inclusively".
+Must Have
+FR-TRA-03
+The RRC Modal shall display: Total Room Rent Amount (editable input), Rack Rate (read-only), Service Charge (read-only, with toggle checkbox), City Charge (read-only, with toggle checkbox), Additional Amount (read-only, with toggle checkbox), VAT Amount (read-only, with toggle checkbox), Discount Amount (read-only, with toggle checkbox).
+Must Have
+FR-TRA-04
+The RRC Modal purpose: The user enters the desired total inclusive rate in the Total Room Rent Amount field; the system back-calculates the base Rack Rate and individual charges (Service Charge, VAT, City Charge, etc.) from the inclusive total.
+Must Have
+FR-TRA-05
+Each charge component in the RRC modal has a checkbox — unchecking a component excludes it from the inclusive rate calculation.
+Must Have
+FR-TRA-06
+An "Apply Rate" button in the RRC modal applies the back-calculated rates to the main Room Detailed Information fields.
+Must Have
+FR-TRA-07
+A close (×) button in the RRC modal dismisses it without applying changes.
+Must Have
+3.3.10 Per-Room Check-In Date, Departure Date & Number of Night
+In addition to the global dates in the Room Registration header, each room in the Room Detailed Information section has its own date and night count fields.
+Req ID
+Requirement Description
+Priority
+FR-PD-01
+Per-Room Check-In Date (ID: fo_reg_check_in_date2, name: checkin_date2): Defaults to the global Check-In Date. Disabled when "Same as global date" is checked (default state).
+Must Have
+FR-PD-02
+Per-Room Departure Date (ID: fo_reg_departure_date2, name: checkout_date2): Defaults to the global Departure Date. Read-only, derived from per-room Check-In Date + Number of Night.
+Must Have
+FR-PD-03
+Number of Night (ID: number_of_night2, name: number_of_night2): Defaults to 1. Disabled when "Same as global date" is checked. Required field.
+Must Have
+FR-PD-04
+Same as global date checkbox (ID: is_global_date, name: is_global_date): When checked (default), per-room dates mirror the global Check-In and Departure Dates and the per-room date/night fields are disabled.
+Must Have
+FR-PD-05
+When "Same as global date" is unchecked, the per-room Check-In Date and Number of Night fields become editable, allowing a different stay period for this specific room within the same registration.
+Must Have
+FR-PD-06
+Changing the Number of Night value shall auto-update the per-room Departure Date accordingly.
+Must Have
+3.3.11 Stay Type Flags (No Post, Complimentary, House Use)
+Req ID
+Requirement Description
+Priority
+FR-FLAG-01
+No Post (ID: is_no_post, name: is_no_post): Checkbox. Default: unchecked. When checked, no charges are posted to the guest folio (not even zero-value entries). The room rate still displays but is not billed.
+Must Have
+FR-FLAG-02
+Complimentary (ID: is_complimentary, name: is_complimentary): Checkbox. Default: unchecked. When checked, the stay is designated as complimentary (no-charge to the guest). This flag activates the Complimentary Item tab (Tab 3) workflow and links to the Complimentary Guest field in Tab 4.
+Must Have
+FR-FLAG-03
+House Use (ID: is_house_use, name: is_house_use): Checkbox. Default: unchecked. When checked, the room is designated for internal hotel use (not a paying or complimentary guest stay). Billing follows house use rules.
+Must Have
+FR-FLAG-04
+Only one of Complimentary or House Use should logically be active at a time; the system shall enforce mutual exclusivity between Complimentary and House Use flags (or issue a soft warning if both are selected).
+Should Have
+FR-FLAG-05
+All three flags persist in the registration record and affect: guest folio posting behavior, Night Audit logic, and Complimentary Item assignment rules.
+Must Have
+3.4 Section C: Additional Service
+The Additional Service section allows staff to attach one or more supplementary billable services to the registration. Examples include Airport Drop, Extra Breakfast, Laundry, Restaurant charges, etc.
+3.4.1 Service Name
+Req ID
+Requirement Description
+Priority
+FR-AS-01
+Service Name (ID: extra_bed, name: none — select element): A dropdown populated with all active additional service types from the HMS service master. Options include: Additional Room Revenue, Airport Drop, Airport Pickup, Business Center, Cafe, Damage Charge, Extra Bed Charge, Extra Breakfast, Early Check-in Fee, Gym, Half Day Charge, Laundry, Minibar, Missing Charge, Miscellaneous, No Show Charge, Restaurant, Spa, Transport, Full Day Charge, Swimming Pool, Recreation, Driver Accommodation, Massage Chair.
+Must Have
+FR-AS-02
+The Service Name dropdown shall default to "Please select" (empty selection).
+Must Have
+FR-AS-03
+Selecting a service shall auto-populate the applicable rate and enable the date fields.
+Should Have
+3.4.2 Service From Date & Service To Date
+Req ID
+Requirement Description
+Priority
+FR-ASDT-01
+Service From Date (ID: extrabed_from_date, name: extrabed_from_date): Defaults to the Check-In Date. Disabled when no service is selected.
+Must Have
+FR-ASDT-02
+Service To Date (ID: extrabed_to_date, name: extrabed_to_date): Defaults to the Check-In Date. Disabled when no service is selected.
+Must Have
+FR-ASDT-03
+Both date fields shall follow YYYY-MM-DD format. Service From Date shall not be later than Service To Date.
+Must Have
+3.4.3 Total Service Amount & Additional RRC Button
+Req ID
+Requirement Description
+Priority
+FR-ASSA-01
+Total Service Amount (ID: extrabed_total, name: extrabed_total): Disabled by default; auto-calculated based on selected service rate × duration (date range).
+Must Have
+FR-ASSA-02
+The RRC button adjacent to Total Service Amount opens the service-level "Calculate Room Rate Inclusively" modal, allowing back-calculation of the service amount.
+Must Have
+FR-ASSA-03
+The service-level RRC modal has the same structure as the room-level RRC modal (Total Amount, Rack Rate, Service Charge, City Charge, Additional Amount, VAT Amount, Discount Amount with individual checkboxes, and an Apply Rate button).
+Must Have
+3.4.4 Add, Update, Cancel Actions for Additional Services
+Req ID
+Requirement Description
+Priority
+FR-ASACT-01
+Add button (ID: add_room_details): Adds the selected service and its details as a new row in the Room Registration Summary Table.
+Must Have
+FR-ASACT-02
+Update button (ID: update_room_details): Visible only when editing an existing additional service entry. Saves changes to the selected service row. Hidden by default (class: d-none).
+Must Have
+FR-ASACT-03
+Cancel button: Clears the Additional Service section form (Service Name, From/To Dates, Total Amount) without saving. Resets the section to its default state.
+Must Have
+FR-ASACT-04
+Multiple services may be added to the same registration; each appears as a separate row in the summary table.
+Must Have
+3.5 Section D: Room Registration Summary Table
+After adding room(s) and services, they appear in the Room Registration Summary Table — an editable grid within the Registration Tab.
+Req ID
+Requirement Description
+Priority
+FR-TBL-01
+The summary table shall display all added rooms with columns: Room Type, Room Number, Adult, Child, Check-In Date, Checkout Date, No. Of Night, Room Rate, Additional Service, Status, Action.
+Must Have
+FR-TBL-02
+The Action column shall contain Edit (info button) and Delete (warning button) action buttons for each row.
+Must Have
+FR-TBL-03
+Clicking Edit for a room row shall re-populate the Room Detailed Information fields with that room's data, allowing the user to modify it (and use the Update button to save changes).
+Must Have
+FR-TBL-04
+Clicking Delete for a room row shall remove that room from the registration (with a confirmation prompt).
+Must Have
+FR-TBL-05
+At least one room must be added to the summary table before the Check-In action can be completed.
+Must Have
+FR-TBL-06
+The Status column shall reflect the room's current availability status (e.g., Available, Reserved, Occupied).
+Must Have
+3.6 Section E: Booking Metadata Fields
+Below the Room Detailed Information and Additional Service sections, the Registration Tab includes additional booking metadata fields.
+3.6.1 Market Segment
+Req ID
+Requirement Description
+Priority
+FR-MS-01
+Market Segment (ID: fo_reg_market_segment, name: fo_reg_market_segment): Dropdown for categorizing the booking source. Options: Dhaka Office, Cox's Office (and any others configured). Default: Please Select.
+Must Have
+3.6.2 Guest Source
+Req ID
+Requirement Description
+Priority
+FR-GS-01
+Guest Source (name: guest_source): Dropdown for categorizing how the guest found the hotel. Options: Web Site, Marketing, Other Source, Broker. Default: Please Select.
+Must Have
+3.6.3 Meal Plan
+Req ID
+Requirement Description
+Priority
+FR-MP-01
+Meal Plan (name: meal_plan): Required dropdown. Options: BED ONLY, BED & BREAKFAST, HALF BOARD, FULL BOARD, BED/FOOD/LAUNDRY EXCEPT HARD DRINKS, Honeymoon Package, Day Long Package, Iftar. Default: Please Select. Required field (marked with *).
+Must Have
+FR-MP-02
+The selected Meal Plan shall affect the F&B service provisioning for the guest stay and may influence room rate calculations.
+Must Have
+3.6.4 Reference
+Req ID
+Requirement Description
+Priority
+FR-REF-01
+Reference (name: reference): Required dropdown. Lists the booking reference channels (Front Office, Mr. Reaz, Mr. Nurul, Online Sales, Booking.com, Expedia.com, Gozayaan, Share Trip, FIT, Sales Team, etc.). Required field (marked with *).
+Must Have
+FR-REF-02
+The Reference field tracks how the booking was sourced and is used in commission and channel management reports.
+Must Have
+3.6.5 Hotel Remarks & POS Remarks
+Req ID
+Requirement Description
+Priority
+FR-REM-01
+Hotel Remarks (ID: fo_reg_hotel_remarks, name: fo_reg_hotel_remarks): A multi-line textarea for internal hotel notes about the registration. Placeholder: "Hotel Remarks". Optional field.
+Must Have
+FR-REM-02
+POS Remarks (ID: fo_reg_pos_remarks, name: fo_reg_pos_remarks): A multi-line textarea for notes relevant to POS (Point of Sale / F&B) systems. Placeholder: "POS Remarks". Optional field.
+Must Have
+FR-REM-03
+Hotel Remarks are visible internally to hotel staff only; POS Remarks are shared with the restaurant/F&B POS system.
+Should Have
+3.7 Primary Action Buttons
+Button
+Type/Style
+ID / Class
+Action Description
+Validation
+Next
+Primary (blue)
+class: btnNext
+Navigates to Tab 2 – Guest Details while preserving all Registration Tab data in session
+None (soft navigation)
+Check-In
+Success (green)
+class: success_new_button extra_padding
+Validates all five tabs and submits the complete Room Registration to the server; creates the active guest registration record; marks the room as Occupied
+All mandatory fields across all tabs must pass validation; at least one room must be added in the summary table
+Update Registration
+Warning (yellow)
+class: warning_new_button extra_padding
+Visible for existing checked-in registrations; saves changes to an existing registration record without triggering a new check-in
+Same mandatory field validations as Check-In
+Add (Room)
+Primary (blue)
+ID: add_room_details
+Adds the configured room to the Room Registration Summary Table
+Room Type and Room Number are required before Add can execute
+Update (Room)
+Primary (blue)
+ID: update_room_details
+Saves edits to an existing room row in the summary table; hidden (d-none) by default, shown during Edit mode
+Room Type and Room Number are required
+Cancel (Room)
+Warning (yellow)
+class: warning_new_button
+Clears the Room Detailed Information form fields without saving; exits Edit mode
+None
+Room List
+Info (cyan)
+ID: room_list_btn
+Opens the Room Selection modal showing available rooms by type
+Room Type must be selected first
+RRC (Room)
+Info (cyan)
+ID: rrcBtn
+Opens the Room Rate Calculator modal for the room charge
+None
+Apply Rate (RRC)
+Success (green)
+ID: applyRate
+Applies the back-calculated inclusive rate from the RRC modal to the main form
+Total Room Rent Amount must be entered in the RRC modal
+RRC (Service)
+Info (cyan)
+ID: e_rrcBtn
+Opens the Room Rate Calculator modal for the additional service
+Service Name must be selected
+Apply Rate (Service RRC)
+Success (green)
+ID: e_applyRate
+Applies the back-calculated rate from the service RRC modal to the service fields
+Total Service Amount must be entered in the RRC modal
+Add (Service)
+Primary (blue)
+class: primary_new_button mr-2
+Adds the additional service entry to the summary table
+Service Name must be selected
+Cancel (Service)
+Warning (yellow)
+class: warning_new_button
+Clears the Additional Service form without saving
+None
+Blank Registration Card
+Link/Button
+class: link-style button
+Opens the blank registration card PDF in a new browser tab
+None
+4. Data Model
+This section defines the primary data entities, fields, types, constraints, and relationships used by the Registration Tab.
+4.1 Primary Entity: Room Registration
+Field Name (DB)
+Form ID / Name
+Data Type
+Constraint
+Label
+Default
+Description
+registration_id
+registration_id
+INT/BIGINT
+PK, AUTO INCREMENT, NOT NULL
+—
+Auto
+System-generated unique registration ID
+reservation_id
+reservation_id
+INT/BIGINT
+FK, NULLABLE
+Reservation
+NULL
+Linked reservation ID (null for walk-in)
+from_reservation
+fo_from_reservation
+TINYINT
+NOT NULL, DEFAULT 0
+—
+0
+0=Walk-in, 1=From Reservation
+check_in_date
+fo_reg_check_in_date
+DATE
+NOT NULL
+Check-In Date*
+App Date
+Guest arrival date (YYYY-MM-DD)
+checkin_time
+checkin_time
+TIME
+NOT NULL
+Check-In Time
+14:00:00
+Time of physical check-in
+departure_date
+fo_reg_departure_date
+DATE
+NOT NULL
+Departure Date*
+App Date+1
+Expected checkout date
+checkout_time
+checkout_time
+TIME
+NOT NULL
+Checkout Time
+12:00:00
+Standard checkout time
+day_count
+day_count
+INT
+NOT NULL
+Total Nights
+1
+Total nights of stay
+listed_company_id
+fo_reg_listed_company
+INT/BIGINT
+FK, NULLABLE
+Listed Company
+NULL
+Corporate company ID (if corporate billing)
+contact_person
+contact_person
+VARCHAR(255)
+NULLABLE
+Contact Person
+NULL
+Corporate contact name
+mobile_number
+mobile_number
+VARCHAR(50)
+NULLABLE
+Mobile Number
+NULL
+Corporate contact mobile
+payment_mode
+payment_mode
+INT
+FK, NULLABLE
+Payment Mode
+NULL
+Self / Company / Before C/O
+pay_for
+pay_for
+INT
+FK, NULLABLE
+Pay For
+NULL
+Scope of company payment coverage
+currency_id
+fo_reg_currency_types
+INT
+FK, NOT NULL
+Currency Name*
+BDT (1)
+Currency for billing
+conversion_rate
+conversion_rate
+DECIMAL(10,4)
+NOT NULL
+Conversion Rate
+1.00
+Exchange rate to base currency
+property_id
+—
+INT
+FK, NOT NULL
+—
+Current property
+Property/hotel identifier
+status
+status
+TINYINT
+NOT NULL, DEFAULT 0
+—
+0
+0=Draft/Pending, 1=Checked-In
+created_by
+—
+INT
+FK, NOT NULL
+—
+Session user
+User ID who created the registration
+created_at
+—
+DATETIME
+NOT NULL
+—
+System time
+Record creation timestamp
+4.2 Child Entity: Room Registration Detail (Per-Room)
+Field Name (DB)
+Form ID / Name
+Data Type
+Constraint
+Label
+Default
+Description
+reg_detail_id
+fo_reg_room_id (id)
+INT/BIGINT
+PK, AUTO INCREMENT
+—
+Auto
+Room detail record ID
+registration_id
+—
+INT/BIGINT
+FK, NOT NULL
+—
+Parent reg ID
+Links to parent Room Registration
+room_type_id
+fo_reg_roomType (room_type)
+INT/BIGINT
+FK, NOT NULL
+Room Types
+—
+Selected room type
+room_number
+fo_reg_room_number (room_number)
+VARCHAR(20)
+NOT NULL
+Room Number
+—
+Physical room number assigned
+pax_in
+roomPax (pax_in)
+INT
+NOT NULL, DEFAULT 1
+Adult (Per Room)
+1
+Number of adult guests
+child_in
+roomChild (child_in)
+INT
+NOT NULL, DEFAULT 0
+Child (Per Room)
+0
+Number of child guests
+rack_rate
+roomRackRate (rack_rate)
+DECIMAL(12,2)
+NOT NULL
+Rack Rate
+Auto from rate plan
+Base nightly rate
+discount_type
+fo_reg_discountType (discount_type)
+INT
+NOT NULL, DEFAULT 1
+Discount Type
+Fixed (1)
+1=Fixed, 2=Percent
+discount_amount
+fo_reg_discountedAccount (discount_amount)
+DECIMAL(12,2)
+NOT NULL, DEFAULT 0
+Discount Amount
+0
+Discount value or percentage
+negotiated_rate
+fo_reg_negotiatedRate (negotiated_rate)
+DECIMAL(12,2)
+NULLABLE
+Negotiated Rate
+NULL
+Management-approved special rate
+service_charge
+fo_reg_serviceCharge (service_charge)
+DECIMAL(12,2)
+NOT NULL
+Service Charge*
+10% auto
+Service charge amount
+service_charge_applied
+fo_reg_serviceChargeCheckbox
+TINYINT
+NOT NULL, DEFAULT 1
+—
+1 (applied)
+1=SC applied, 0=SC waived
+vat_amount
+fo_reg_vatAmount (vat_amount)
+DECIMAL(12,2)
+NOT NULL
+VAT Amount*
+15% auto
+VAT amount
+vat_applied
+fo_reg_vatAmountCheckbox
+TINYINT
+NOT NULL, DEFAULT 1
+—
+1 (applied)
+1=VAT applied, 0=VAT waived
+city_charge
+fo_reg_cityCharge (city_charge)
+DECIMAL(12,2)
+NOT NULL
+City Charge*
+Auto
+City/municipality charge
+city_charge_applied
+fo_reg_cityChargeCheckbox
+TINYINT
+NOT NULL, DEFAULT 1
+—
+1 (applied)
+1=applied, 0=waived
+additional_charge
+fo_reg_additionalCharge (additional_charge)
+DECIMAL(12,2)
+NOT NULL
+Additional Charges*
+Auto
+Miscellaneous additional charge
+additional_charge_applied
+fo_reg_additonalChargesCheckbox
+TINYINT
+NOT NULL, DEFAULT 1
+—
+1 (applied)
+1=applied, 0=waived
+total_room_rate
+fo_reg_total_room_rent (total_room_rate)
+DECIMAL(12,2)
+NOT NULL
+Total Room Rent Amt*
+Auto-calc
+Total per-night charge incl. all applicable charges
+checkin_date2
+fo_reg_check_in_date2 (checkin_date2)
+DATE
+NOT NULL
+Check-In Date*
+Global date
+Per-room check-in date
+checkout_date2
+fo_reg_departure_date2 (checkout_date2)
+DATE
+NOT NULL
+Departure Date*
+Global +1
+Per-room departure date
+number_of_night2
+number_of_night2 (number_of_night2)
+INT
+NOT NULL, DEFAULT 1
+Number of Night*
+1
+Number of nights for this room
+is_global_date
+is_global_date
+TINYINT
+NOT NULL, DEFAULT 1
+Same as global date
+1 (checked)
+1=use global dates, 0=custom dates
+is_no_post
+is_no_post
+TINYINT
+NOT NULL, DEFAULT 0
+No Post
+0 (unchecked)
+1=no folio postings for this room
+is_complimentary
+is_complimentary
+TINYINT
+NOT NULL, DEFAULT 0
+Complimentary
+0 (unchecked)
+1=complimentary stay
+is_house_use
+is_house_use
+TINYINT
+NOT NULL, DEFAULT 0
+House Use
+0 (unchecked)
+1=internal hotel use room
+room_status
+status
+TINYINT
+NOT NULL, DEFAULT 0
+Status
+0
+0=Available/Draft, 1=Occupied
+4.3 Child Entity: Additional Service
+Field Name (DB)
+Form ID / Name
+Data Type
+Constraint
+Label
+Description
+service_id
+—
+INT/BIGINT
+PK, AUTO INCREMENT
+—
+System-generated additional service ID
+registration_id
+—
+INT/BIGINT
+FK, NOT NULL
+—
+Links to parent Room Registration
+service_name_id
+extra_bed (name)
+INT/BIGINT
+FK, NOT NULL
+Service Name
+Foreign key to service master
+service_from_date
+extrabed_from_date
+DATE
+NOT NULL
+Service From Date
+Start date of the additional service
+service_to_date
+extrabed_to_date
+DATE
+NOT NULL
+Service To Date
+End date of the additional service
+total_amount
+extrabed_total
+DECIMAL(12,2)
+NOT NULL
+Total Service Amount
+Calculated total for the service period
+service_rack_rate
+extrabed_rate
+DECIMAL(12,2)
+HIDDEN
+—
+Per-unit/night rate of the service
+service_vat
+extrabed_vat
+DECIMAL(12,2)
+HIDDEN
+—
+VAT component of the service charge
+service_sc
+extrabed_Scharge
+DECIMAL(12,2)
+HIDDEN
+—
+Service charge component
+4.4 Booking Metadata Fields (Registration Level)
+Field Name (DB)
+Form ID / Name
+Data Type
+Constraint
+Label
+Description
+market_segment_id
+fo_reg_market_segment
+INT/BIGINT
+FK, NULLABLE
+Market Segment
+Booking market segment classification
+guest_source_id
+guest_source (name)
+INT/BIGINT
+FK, NULLABLE
+Guest Source
+How the guest found the hotel
+meal_plan_id
+meal_plan (name)
+INT/BIGINT
+FK, NOT NULL
+Meal Plan*
+Required; determines F&B service plan
+reference_id
+reference (name)
+INT/BIGINT
+FK, NOT NULL
+Reference*
+Required; booking channel or referral source
+hotel_remarks
+fo_reg_hotel_remarks
+TEXT
+NULLABLE
+Hotel Remarks
+Internal hotel notes; not shown to guest
+pos_remarks
+fo_reg_pos_remarks
+TEXT
+NULLABLE
+POS Remarks
+Notes sent to the F&B/POS system
+4.5 Hidden / System Fields
+Field ID / Name
+Type
+Value / Purpose
+base_url
+hidden input
+Form submission URL (POST target)
+csrf_test_name
+hidden input
+CSRF protection token — submitted with every form post
+registration_id
+hidden input
+Stores the existing registration_id when editing an existing record; blank for new registration
+reservation_id
+hidden input
+Stores the selected reservation_id from the Reservation dropdown
+room_number (hidden)
+hidden input
+Mirrors the visible room_number field value for form submission
+room_type (hidden)
+hidden input
+Mirrors the selected room_type_id for form submission
+fo_from_reservation
+hidden input
+0 = walk-in; reservation_id = from-reservation mode
+application_date
+hidden input
+Stores the current application date (YYYY-MM-DD); controls default dates
+roomQuantity
+hidden input
+Quantity of rooms of the selected type (from reservation)
+room_status (status)
+hidden input
+Current room status code for submission
+service_charges_db
+hidden input
+Service charge percentage from system config (10)
+vat_charges_db
+hidden input
+VAT percentage from system config (15)
+extrabed_rate
+hidden input
+Service rack rate per unit for additional service calculation
+extrabed_vat
+hidden input
+VAT amount for the additional service
+extrabed_Scharge
+hidden input
+Service charge for the additional service
+call_from
+hidden input
+new_add = new room being added; edit = editing existing room
+edit_item_index
+hidden input
+Index of the room row being edited in the summary table
+4.6 Data Relationships
+•  One Room Registration has zero or one reservation link (0 or 1 : 1 with Reservation)
+•  One Room Registration has one or many Room Registration Detail records (1:N) — each room added is one row
+•  One Room Registration has zero or many Additional Service records (0:N)
+•  One Room Registration Detail links to one Room Type and one Room Number from inventory
+•  One Room Registration links to one Currency, one Property, one Created-by User
+•  One Room Registration may optionally link to one Listed Company
+•  One Room Registration links to one Meal Plan (required) and one Reference (required)
+5. UI Components Summary
+This section provides a complete inventory of every UI component on the Registration Tab, organized by section.
+5.1 Global Tab Navigation Bar
+Component
+Type
+Label
+State on Registration Tab
+Action
+Registration Tab
+Button (nav tab)
+Registration
+Active (selected – dark background, white text)
+Current tab; no navigation action
+Guest Details Tab
+Button (nav tab)
+Guest Details
+Inactive
+Click → navigate to Tab 2
+Complimentary Item Tab
+Button (nav tab)
+Complimentary Item
+Inactive
+Click → navigate to Tab 3
+Others Information Tab
+Button (nav tab)
+Others Information
+Inactive
+Click → navigate to Tab 4
+Search Tab
+Button (nav tab)
+Search
+Inactive
+Click → navigate to Tab 5
+Blank Registration Card
+Link button (cyan border)
+Blank Registration Card
+Always visible
+Opens /front_office/room-registration/blank-registration-card in new tab
+5.2 Section A: Room Registration Card — UI Components
+#
+Component
+Type
+ID
+Default
+Required
+Editable
+1
+Reservation Checkbox
+Checkbox
+fo_reg_reservation_checkbox
+Unchecked
+No
+Yes
+2
+Reservation Dropdown
+Select (disabled by default)
+fo_reg_reservation
+-- Please Select --
+No (unless reservation-linked)
+When checkbox checked
+3
+Check-In Date
+Text input (read-only, date picker)
+fo_reg_check_in_date
+Application date (2026-03-05)
+Yes
+Read-only
+4
+Check-In Time
+Time input
+fo-reg-check-in-time
+02:00 PM (14:00:00)
+No
+Yes
+5
+Departure Date
+Text input (disabled)
+fo_reg_departure_date
+Application date + 1
+Yes
+Disabled
+6
+Checkout Time
+Time input (disabled)
+checkout-time
+12:00 PM (12:00:00)
+No
+Disabled
+7
+Total Nights
+Number input (disabled)
+day_count
+1
+No
+Disabled
+8
+Total Nights Override Checkbox
+Checkbox
+checkout_checkbox
+Unchecked
+No
+Yes
+9
+Listed Company Checkbox
+Checkbox
+listed_company_checkbox
+Unchecked
+No
+Yes
+10
+Listed Company Dropdown
+Select (disabled by default)
+fo_reg_listed_company
+-- Please Select --
+No
+When checkbox checked
+11
+Contact Person
+Text input
+fo_reg_contact_person
+Empty
+No
+Yes
+12
+Mobile Number
+Text input
+fo_reg_mobile_number
+Empty
+No
+Yes
+13
+Payment Mode
+Select (disabled by default)
+fo_reg_payment_mode
+-- Please Select --
+No
+When company checked
+14
+Pay For
+Select (disabled by default)
+fo_reg_pay_for
+-- Please Select --
+No
+When company checked
+15
+Currency Name
+Select (dropdown)
+fo_reg_currency_types
+BDT
+Yes
+Yes
+16
+Conversion Rate
+Text input (read-only)
+fo_reg_conversion_rate
+1.00
+No
+Read-only
+5.3 Section B: Room Detailed Information Card — UI Components
+#
+Component
+Type
+ID
+Default
+Required
+Editable
+1
+Room Types
+Select (dropdown)
+fo_reg_roomType
+--- Please Select ---
+Yes
+Yes
+2
+Adult (Per Room)
+Number input
+roomPax
+1
+Yes
+Yes
+3
+Child (Per Room)
+Number input
+roomChild
+0
+No
+Yes
+4
+Room List Button
+Button (cyan)
+room_list_btn
+—
+—
+Clickable
+5
+Room Number
+Text input (read-only)
+fo_reg_room_number
+Empty
+Yes
+Via modal only
+6
+Rack Rate
+Text input (read-only)
+roomRackRate
+Auto from rate plan
+No
+Read-only
+7
+Discount Type
+Select (dropdown)
+fo_reg_discountType
+Fixed (1)
+No
+Yes
+8
+Discount Amount
+Number input
+fo_reg_discountedAccount
+0
+No
+Yes
+9
+Negotiated Rate
+Number input
+fo_reg_negotiatedRate
+Empty
+No
+Yes
+10
+Service Charge
+Number input (disabled)
+fo_reg_serviceCharge
+10% of rack rate
+Yes
+Auto-calc
+11
+Service Charge Checkbox
+Checkbox
+fo_reg_serviceChargeCheckbox
+Checked
+—
+Yes
+12
+VAT Amount
+Number input (disabled)
+fo_reg_vatAmount
+15% of base
+Yes
+Auto-calc
+13
+VAT Checkbox
+Checkbox
+fo_reg_vatAmountCheckbox
+Checked
+—
+Yes
+14
+City Charge
+Number input (disabled)
+fo_reg_cityCharge
+Auto
+Yes
+Auto-calc
+15
+City Charge Checkbox
+Checkbox
+fo_reg_cityChargeCheckbox
+Checked
+—
+Yes
+16
+Additional Charges
+Number input (disabled)
+fo_reg_additionalCharge
+Auto
+Yes
+Auto-calc
+17
+Additional Charges Checkbox
+Checkbox
+fo_reg_additonalChargesCheckbox
+Checked
+—
+Yes
+18
+Total Room Rent Amount
+Number input (disabled)
+fo_reg_total_room_rent
+Auto-calc
+Yes
+Read-only
+19
+RRC Button (Room)
+Button (cyan)
+rrcBtn
+—
+—
+Clickable
+20
+Per-Room Check-In Date
+Text input (disabled)
+fo_reg_check_in_date2
+Global Check-In Date
+Yes
+When "Same as global date" unchecked
+21
+Per-Room Departure Date
+Text input (read-only)
+fo_reg_departure_date2
+Global Departure Date
+Yes
+Derived
+22
+Number of Night
+Number input (disabled)
+number_of_night2
+1
+Yes
+When "Same as global date" unchecked
+23
+Same as global date Checkbox
+Checkbox
+is_global_date
+Checked (default)
+—
+Yes
+24
+No Post Checkbox
+Checkbox
+is_no_post
+Unchecked
+—
+Yes
+25
+Complimentary Checkbox
+Checkbox
+is_complimentary
+Unchecked
+—
+Yes
+26
+House Use Checkbox
+Checkbox
+is_house_use
+Unchecked
+—
+Yes
+27
+Add Button (Room)
+Button (primary)
+add_room_details
+—
+—
+Clickable
+28
+Update Button (Room)
+Button (primary, hidden)
+update_room_details
+Hidden (d-none)
+—
+Clickable in edit mode
+29
+Cancel Button (Room)
+Button (warning)
+—
+—
+—
+Clickable
+5.4 RRC Modal — UI Components
+#
+Component
+Type
+ID
+Editable
+Description
+1
+Total Room Rent Amount
+Number input
+rrc_total_room_rate
+Yes
+User-entered inclusive total; back-calculation base
+2
+Rack Rate
+Number input (read-only)
+rrc_rack_rate
+No
+Back-calculated base rack rate
+3
+Service Charge (w/ checkbox)
+Text input + Checkbox
+rrc_service_charge / rrc_service_charge_checkbox
+No / Yes
+SC component; checkbox includes/excludes from calc
+4
+City Charge (w/ checkbox)
+Text input + Checkbox
+rrc_city_charge / rrc_city_charge_checkbox
+No / Yes
+City charge component
+5
+Additional Amount (w/ checkbox)
+Text input + Checkbox
+rrc_additional_amount / rrc_additional_amount_checkbox
+No / Yes
+Additional charge component
+6
+VAT Amount (w/ checkbox)
+Text input + Checkbox
+rrc_vat_amount / rrc_vat_amount_checkbox
+No / Yes
+VAT component
+7
+Discount Amount (w/ checkbox)
+Text input + Checkbox
+rrc_discount_amount / rrc_discount_amount_checkbox
+No / Yes
+Discount component
+8
+Apply Rate Button
+Button (success/green)
+applyRate
+—
+Applies back-calculated rates to main form
+9
+Close (×) Button
+Button
+—
+—
+Dismisses modal without changes
+5.5 Section C: Additional Service — UI Components
+#
+Component
+Type
+ID
+Default
+Required
+1
+Service Name
+Select (dropdown)
+extra_bed
+Please select
+Yes (to add)
+2
+Service From Date
+Text input (read-only)
+extrabed_from_date
+Check-In Date
+Yes (auto)
+3
+Service To Date
+Text input (read-only)
+extrabed_to_date
+Check-In Date
+Yes (auto)
+4
+Total Service Amount
+Number input (disabled)
+extrabed_total
+Auto-calc
+Yes (auto)
+5
+RRC Button (Service)
+Button (cyan)
+e_rrcBtn
+—
+—
+6
+Add Button (Service)
+Button (primary)
+—
+—
+—
+7
+Cancel Button (Service)
+Button (warning)
+—
+—
+—
+5.6 Section D: Room Summary Table — UI Components
+Column
+Data Source
+Editable
+Room Type
+Selected from Room Types dropdown
+No (read-only in table)
+Room Number
+Selected from Room List modal
+No
+Adult
+From Adult (Per Room) field
+No
+Child
+From Child (Per Room) field
+No
+Checkin Date
+Per-room Check-In Date
+No
+Checkout Date
+Per-room Departure Date
+No
+No. Of Night
+Per-room Number of Night
+No
+Room Rate
+Total Room Rent Amount
+No
+Additional Service
+Linked additional service (if any)
+No
+Status
+Room status from inventory
+No
+Action – Edit
+Info/cyan button
+Triggers Edit mode; repopulates Room Detailed Information form
+Action – Delete
+Warning/orange button
+Removes room row (with confirmation)
+5.7 Section E: Booking Metadata — UI Components
+#
+Component
+Type
+ID
+Options
+Required
+1
+Market Segment
+Select (dropdown)
+fo_reg_market_segment
+Dhaka Office, Cox's Office
+No
+2
+Guest Source
+Select (dropdown)
+guest_source (name)
+Web Site, Marketing, Other Source, Broker
+No
+3
+Meal Plan
+Select (dropdown)
+meal_plan (name)
+BED ONLY, BED & BREAKFAST, HALF BOARD, FULL BOARD, BED/FOOD/LAUNDRY, Honeymoon Package, Day Long Package, Iftar
+Yes (*)
+4
+Reference
+Select (dropdown)
+reference (name)
+Front Office, Sales Team, booking portals, individual staff names
+Yes (*)
+5
+Hotel Remarks
+Textarea
+fo_reg_hotel_remarks
+Empty (placeholder: Hotel Remarks)
+No
+6
+POS Remarks
+Textarea
+fo_reg_pos_remarks
+Empty (placeholder: POS Remarks)
+No
+6. Business Rules
+Business rules govern all logic, constraints, and conditional behaviors enforced on the Registration Tab.
+Rule ID
+Rule Name
+Condition
+Action / Enforcement
+Priority
+BR-001
+Reservation vs. Walk-In
+Reservation checkbox is unchecked
+Walk-in mode: Reservation dropdown is disabled; registration is walk-in; no pre-population from reservation
+Must Have
+BR-002
+Reservation Pre-Population
+Reservation checkbox is checked AND a reservation is selected
+System auto-populates: Check-In Date, Departure Date, Room Type, Rack Rate, Currency, Conversion Rate, Complimentary Items; reservation_id stored in hidden field
+Must Have
+BR-003
+Listed Company Context
+Listed Company checkbox is unchecked
+Individual guest billing: Company fields (Contact Person, Mobile, Payment Mode, Pay For) are disabled/hidden
+Must Have
+BR-004
+Corporate Billing Context
+Listed Company checkbox is checked and company selected
+Corporate billing mode: Contact Person, Mobile Number, Payment Mode, Pay For fields become available; billing routed to company account
+Must Have
+BR-005
+Global Date Lock
+Same as global date checkbox is CHECKED (default)
+Per-room Check-In Date and Number of Night fields are disabled; dates mirror the global Check-In/Departure Dates
+Must Have
+BR-006
+Custom Room Date Override
+Same as global date checkbox is UNCHECKED
+Per-room Check-In Date and Number of Night fields are enabled; user may set a different stay period for this specific room within the same registration
+Must Have
+BR-007
+Date Validation
+On any date entry
+Departure Date must always be > Check-In Date; system shall prevent invalid date ranges and display an error
+Must Have
+BR-008
+Total Nights Auto-Calc
+Check-In or Departure Date changes
+Total Nights = Departure Date minus Check-In Date (days); recalculated automatically; Number of Night per-room also recalculated
+Must Have
+BR-009
+Rack Rate Auto-Fetch
+Room Type is selected
+Rack Rate is fetched from the active rate plan for the selected room type and stay period; it is not editable directly
+Must Have
+BR-010
+Service Charge Auto-Calc
+Rack Rate changes or Service Charge checkbox toggled
+Service Charge = Rack Rate × 10% (system default); when checkbox is unchecked, Service Charge = 0 for this room
+Must Have
+BR-011
+VAT Auto-Calc
+Rack Rate changes or VAT checkbox toggled
+VAT = (Rack Rate + Service Charge) × 15% (system default); when checkbox unchecked, VAT = 0
+Must Have
+BR-012
+City Charge Auto-Calc
+Rack Rate changes or City Charge checkbox toggled
+City Charge is applied per rate plan configuration; checkbox controls whether it is included
+Must Have
+BR-013
+Additional Charges Auto-Calc
+Rack Rate changes or Additional Charges checkbox toggled
+Additional Charges per rate plan; checkbox controls inclusion
+Must Have
+BR-014
+Total Room Rent Calculation
+Any billing field changes
+Total Room Rent Amt = Rack Rate + Service Charge (if applied) + VAT (if applied) + City Charge (if applied) + Additional Charges (if applied) − Discount Amount; auto-recalculated on any change
+Must Have
+BR-015
+Discount Type Logic
+Discount Type = Fixed
+Discount Amount is deducted directly in currency units from the base rate; Discount Amount cannot exceed Rack Rate
+Must Have
+BR-016
+Discount Percent Logic
+Discount Type = Percent
+Discount Amount is treated as a % of Rack Rate; system converts to monetary value before deducting
+Must Have
+BR-017
+Negotiated Rate Override
+Negotiated Rate is entered (non-zero)
+Negotiated Rate replaces Rack Rate as the base for all charge calculations; overrides rate plan rate
+Must Have
+BR-018
+RRC Back-Calculation
+User enters Total Room Rent Amt in RRC modal and clicks Apply Rate
+System back-calculates Rack Rate and individual charge components from the inclusive total; individual component checkboxes determine which charges are factored in
+Must Have
+BR-019
+No Post Flag
+is_no_post = 1 (checked)
+No folio posting lines are created for this room; not even zero-value entries; room rate still recorded but not billed; affects Night Audit
+Must Have
+BR-020
+Complimentary Flag
+is_complimentary = 1 (checked)
+Stay is designated complimentary; all room charges are suppressed; Tab 3 (Complimentary Item) workflow is activated; links to Complimentary Guest field in Tab 4
+Must Have
+BR-021
+House Use Flag
+is_house_use = 1 (checked)
+Room designated for internal hotel use; follows house use billing rules; no guest invoicing
+Must Have
+BR-022
+Complimentary + House Use Conflict
+Both is_complimentary and is_house_use are checked simultaneously
+System should display a soft warning: "A room cannot be both Complimentary and House Use. Please select only one." No hard block, but strong advisory.
+Should Have
+BR-023
+Room List Filter
+Room List button clicked
+Only vacant (Available) rooms of the selected Room Type are shown; rooms already occupied, under maintenance, or already added in the current session are excluded
+Must Have
+BR-024
+Mandatory Room Before Check-In
+Check-In button clicked with zero rooms in summary table
+System blocks check-in and displays: "Please add at least one room before checking in."
+Must Have
+BR-025
+Mandatory Field Validation at Check-In
+Check-In button clicked
+System validates: Room Type (required), Room Number (required), Adult count ≥ 1 (required), Total Room Rent Amount > 0 (when not complimentary/no-post), Meal Plan (required), Reference (required). Errors displayed per field.
+Must Have
+BR-026
+Multiple Room Registration
+User adds more than one room via the Add Room flow
+Each room is stored as a separate row in the Room Registration Detail entity; all rooms are linked to the same registration_id; each room can have different stay dates, rates, and flags
+Must Have
+BR-027
+Currency Conversion Impact
+Currency Name is changed
+All monetary fields (Rack Rate, charges, Total Room Rent) are recalculated using the new conversion rate from the currency master; BDT conversion rate = 1.00 (no conversion)
+Must Have
+BR-028
+Additional Service Duration Calc
+Service Name selected and dates entered
+Total Service Amount = Service Rack Rate × number of service days (Service To Date − Service From Date + 1)
+Must Have
+BR-029
+Additional Service Date Constraint
+Service From Date and Service To Date are set
+Service From Date ≥ Registration Check-In Date; Service To Date ≤ Departure Date; From Date ≤ To Date
+Must Have
+BR-030
+Session Persistence
+User navigates away from Registration Tab and returns
+All entered data (form fields, summary table rows) must be preserved in the current browser session without data loss
+Must Have
+BR-031
+Hotel Remarks Internal Only
+Hotel Remarks entered
+Hotel Remarks are for internal staff reference only; they must NOT be printed on guest-facing documents (e.g., guest folio, registration card handed to guest)
+Must Have
+BR-032
+POS Remarks to F&B System
+POS Remarks entered
+POS Remarks must be forwarded to the hotel F&B/POS system upon check-in so restaurant staff are informed of guest preferences
+Should Have
+BR-033
+Room Status Update on Check-In
+Check-In action completes successfully
+The room's status in the room inventory is updated to "Occupied"; the room disappears from the Room List modal for new registrations
+Must Have
+BR-034
+Update Registration vs. Check-In
+User is editing an existing, checked-in registration
+The "Update Registration" button is shown instead of (or alongside) "Check-In"; updates are applied to the existing record without creating a new check-in event
+Must Have
+7. Non-Functional Requirements
+7.1 Performance
+NFR ID
+Requirement
+Target
+NFR-PERF-01
+Room Registration page (Registration Tab) must load fully within 3 seconds on broadband.
+< 3 seconds page load
+NFR-PERF-02
+Room Types dropdown must populate within 500ms of page load.
+< 500ms
+NFR-PERF-03
+Rack Rate and charge fields must auto-populate within 1 second of Room Type selection.
+< 1 second
+NFR-PERF-04
+Room List modal must load and display available rooms within 2 seconds.
+< 2 seconds
+NFR-PERF-05
+Reservation dropdown must populate within 1 second of enabling (when reservation checkbox is checked).
+< 1 second
+NFR-PERF-06
+RRC back-calculation must complete client-side within 200ms of user input.
+< 200ms
+NFR-PERF-07
+Check-In API call must complete (server-side) within 5 seconds under normal load.
+< 5 seconds
+NFR-PERF-08
+System must support 50+ concurrent front-desk users submitting check-ins without performance degradation.
+50 concurrent users
+7.2 Usability
+NFR ID
+Requirement
+Target
+NFR-USE-01
+All form sections must be fully usable on a 1024px wide desktop monitor without horizontal scrolling.
+Min 1024px width
+NFR-USE-02
+Required fields must be clearly marked with an asterisk (*) and labelled consistently.
+All required fields marked
+NFR-USE-03
+Disabled fields must be visually distinct from editable fields (grey background, reduced opacity).
+Visible disabled state
+NFR-USE-04
+A front-desk agent must be able to complete a walk-in registration and check-in within 3 minutes.
+< 3 minutes task time
+NFR-USE-05
+Error messages must be specific, field-level, and actionable (e.g., "Room Type is required" not just "Invalid input").
+Field-level errors
+NFR-USE-06
+The page must be responsive and usable on tablets (768px width) for mobile front-desk operations.
+Responsive at 768px
+NFR-USE-07
+Tab navigation must not cause data loss; the user must receive a warning before leaving the page (browser-level) if there are unsaved changes.
+Unsaved changes warning
+7.3 Security
+NFR ID
+Requirement
+Target
+NFR-SEC-01
+All form submissions must include a CSRF token (csrf_test_name hidden field) validated server-side.
+CSRF protection on all POSTs
+NFR-SEC-02
+Users must be authenticated (active session) to access the Registration Tab; unauthenticated requests are redirected to the login page.
+Session authentication required
+NFR-SEC-03
+Role-based access control must restrict which user roles can create, edit, check-in, and delete room registrations.
+RBAC enforced at API and UI levels
+NFR-SEC-04
+Negotiated Rate entry and No Post/Complimentary/House Use flag setting may require elevated role (e.g., Duty Manager) depending on hotel policy.
+Configurable role-based field restrictions
+NFR-SEC-05
+All server-side inputs (room type IDs, room numbers, rate values) must be validated against the master data to prevent injection or data manipulation.
+Server-side input validation
+NFR-SEC-06
+Monetary fields must enforce numeric-only input with a maximum decimal precision of 2 decimal places.
+Input type validation
+7.4 Reliability & Availability
+NFR ID
+Requirement
+Target
+NFR-REL-01
+The Registration Tab must be available as part of the HMS system with 99.5% uptime SLA.
+99.5% uptime
+NFR-REL-02
+Check-In operation must be transactional: if any part of the multi-room check-in fails, the entire transaction must roll back.
+Transactional integrity
+NFR-REL-03
+If a rate fetch API call fails (e.g., network error), the system must display an error and allow the user to retry without losing other form data.
+Graceful API error handling
+NFR-REL-04
+Session data must persist if the user refreshes the page before submitting (via browser session storage or draft-save mechanism).
+Session resilience
+7.5 Maintainability & Configurability
+NFR ID
+Requirement
+Target
+NFR-MAINT-01
+Service Charge (%) and VAT (%) defaults must be configurable via the HMS admin panel without code changes.
+Admin-configurable
+NFR-MAINT-02
+Room Types, Rate Plans, Listed Companies, Market Segments, Guest Sources, Meal Plans, References, and Service Names must all be maintainable via the HMS back-office configuration without code changes.
+Admin-configurable master data
+NFR-MAINT-03
+The Pay For and Payment Mode options must be configurable via the HMS admin panel.
+Admin-configurable
+7.6 Audit & Compliance
+NFR ID
+Requirement
+Target
+NFR-AUD-01
+All room registration creation, modification, and check-in events must be logged in the system audit trail with user ID, timestamp, and action details.
+Full audit trail
+NFR-AUD-02
+Any changes to billing fields (Rack Rate, Discount, Negotiated Rate) on an existing registration must be logged with before/after values.
+Change audit log
+NFR-AUD-03
+Audit logs must be retained for a minimum of 3 years.
+3-year retention
+NFR-AUD-04
+The system must support generating a report of all registrations within a date range, filterable by room type, company, market segment, meal plan, and reference channel.
+Reporting capability
+8. Gaps & Recommendations
+This section identifies functional gaps, usability shortcomings, and enhancement opportunities observed in the current implementation of the Registration Tab.
+Gap ID
+Area
+Current Behavior
+Gap / Issue
+Recommendation
+Priority
+GAP-001
+Draft / Auto-Save
+No auto-save; all data is lost if the user closes the browser or the session times out before check-in.
+Data loss risk during long registration sessions or connectivity issues.
+Implement draft-save functionality: auto-save Registration Tab data to the server every 30 seconds or on navigation between tabs (as a draft/pending registration status).
+High
+GAP-002
+Complimentary + House Use Mutual Exclusivity
+Both "Complimentary" and "House Use" checkboxes can be checked simultaneously.
+Logically conflicting stay types can be saved, causing downstream processing issues in billing and audit.
+Enforce mutual exclusivity: checking one should automatically uncheck the other, with a clear tooltip or message.
+High
+GAP-003
+Negotiated Rate Override Audit
+A Negotiated Rate can be entered by any user without restriction.
+Unauthorized rate changes bypass rate plan controls, risking revenue loss.
+Require manager-level authentication (e.g., manager PIN or elevated session role) to enter or change the Negotiated Rate.
+High
+GAP-004
+Discount Amount Cap Validation
+No client-side validation prevents Discount Amount from exceeding Rack Rate when Discount Type is Fixed.
+A discount greater than the rack rate would produce a negative Total Room Rent Amount.
+Enforce client-side and server-side validation: if Discount Type = Fixed, Discount Amount must be ≤ Rack Rate. Display an inline error.
+High
+GAP-005
+Room List Without Room Type
+No prominent error is shown if the user tries to open the Room List modal before selecting a Room Type.
+Poor UX; modal may show all rooms or an empty list, confusing the user.
+Disable the Room List button until a Room Type is selected. Show a tooltip: "Please select a Room Type first."
+Medium
+GAP-006
+Mandatory Room Enforcement
+No UI feedback when Check-In is attempted with zero rooms in the summary table.
+Users are blocked from checking in but receive no clear feedback about why.
+Show a clear, field-level error near the summary table: "At least one room must be added before check-in."
+High
+GAP-007
+Additional Service Date Constraints
+No validation prevents Service From Date from being before the Check-In Date or Service To Date from being after the Departure Date.
+Out-of-stay services can be added, causing billing inconsistencies.
+Enforce: Service From Date ≥ Check-In Date AND Service To Date ≤ Departure Date. Display inline validation errors.
+Medium
+GAP-008
+Pay For & Payment Mode Dependency on Company
+Pay For and Payment Mode fields are present but may be accessible without a company being selected.
+Staff can set Payment Mode without a company context, causing data integrity issues.
+Strictly enforce that Payment Mode and Pay For fields are only enabled (and saved) when a Listed Company is selected.
+Medium
+GAP-009
+Currency Impact Clarity
+When currency is changed, it is unclear to the user which fields have been recalculated.
+Staff may not notice rate changes after currency switch, especially in multi-room registrations.
+Highlight recalculated fields (e.g., yellow flash/border animation) after currency change to draw attention to updated values.
+Low
+GAP-010
+Room Type Typo in Service Master
+The service "Additional Room Rrevenue" contains a typo (double 'r' in "Revenue").
+Incorrect label visible on the registration form; may confuse staff and appears unprofessional.
+Correct the label to "Additional Room Revenue" in the service master configuration.
+Low
+GAP-011
+Total Nights Manual Override Logic
+The "Checkout checkbox" next to Total Nights appears to allow manual override, but the behavior is undocumented.
+If the override is not properly validated server-side, it could cause mismatched date/night records.
+Document and test the Total Nights override checkbox behavior; add server-side validation to confirm that override Total Nights matches the date difference or triggers appropriate downstream adjustments.
+Medium
+GAP-012
+No Summary of All Charges
+There is no running total or billing summary panel showing: base rate + SC + VAT + City Charge + Additional Charges + all additional services.
+Front-desk agents cannot see the total billing amount across all rooms and services without mentally summing values.
+Add a "Billing Summary" panel at the bottom of the Registration Tab showing a clear breakdown and grand total of all charges across all added rooms and services.
+Medium
+GAP-013
+Accessibility (A11Y)
+No ARIA attributes observed on complex interactive elements (modals, checkboxes, disabled fields).
+Screen reader users and visually impaired staff cannot effectively navigate the Registration Tab.
+Add ARIA roles, aria-label, aria-required, aria-disabled, and aria-expanded attributes to all interactive form elements and modals. Validate against WCAG 2.1 AA.
+Medium
+GAP-014
+Driver Accommodation Typo
+Service master contains "Driver Accomodation" (missing one 'm' in 'Accommodation').
+Typographical error in the Service Name dropdown, visible to front-desk staff.
+Correct spelling to "Driver Accommodation" in the service master configuration.
+Low
+GAP-015
+Mobile / Tablet Responsiveness
+The multi-column layout of Room Detailed Information may not reflow properly on tablet screens.
+Front-desk staff using tablets may experience overlapping fields or horizontal scrolling on the Registration Tab.
+Test and validate responsive layout at 768px and 1024px breakpoints; use CSS media queries to ensure 2-column or 1-column reflow for tablet/mobile.
+Medium
+GAP-016
+Confirmation Before Delete (Room Row)
+No explicit confirmation dialog visible when the Delete button is clicked on a room row in the summary table.
+Accidental room deletion can occur without user confirmation.
+Implement a confirmation dialog: "Are you sure you want to remove Room [X]? This action cannot be undone without re-adding the room."
+High
+GAP-017
+Meal Plan Required but Selectable Without Rate Context
+Meal Plan is marked as required (*) but changing the Meal Plan does not dynamically update the room rate or charges.
+If meal plan affects the room rate (e.g., BED & BREAKFAST includes breakfast charge), the static rate display does not reflect this.
+Either (a) link Meal Plan selection to rate plan to update charges dynamically, or (b) clearly document that Meal Plan is for informational/operational routing only and does not affect the nightly rate shown on the form.
+Medium
+9. Acceptance Criteria
+The following acceptance criteria must all be satisfied for the Registration Tab to be considered complete, stable, and ready for production deployment.
+9.1 Page Load & Navigation
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-LOAD-01
+Registration Tab is the default active tab when Room Registration page loads
+Navigate to /front_office/new-room-registration
+Tab 1 (Registration) is active; Registration form is displayed
+AC-LOAD-02
+Page loads within 3 seconds on broadband
+Performance test (Lighthouse / network throttle)
+Page load time < 3s
+AC-LOAD-03
+Currency defaults to BDT with Conversion Rate 1.00
+Visual inspection on page load
+Currency Name = BDT; Conversion Rate = 1.00
+AC-LOAD-04
+Check-In Date defaults to application date
+Visual inspection
+Check-In Date = current application date
+AC-LOAD-05
+Departure Date defaults to application date + 1 night
+Visual inspection
+Departure Date = Check-In Date + 1 day
+AC-LOAD-06
+Total Nights defaults to 1
+Visual inspection
+Total Nights = 1
+AC-LOAD-07
+Adult (Per Room) defaults to 1; Child defaults to 0
+Visual inspection
+Adult = 1, Child = 0
+AC-LOAD-08
+Discount Type defaults to Fixed; Discount Amount defaults to 0
+Visual inspection
+Discount Type = Fixed; Amount = 0
+AC-LOAD-09
+Reservation checkbox is unchecked and Reservation dropdown is disabled on load
+Visual inspection
+Reservation checkbox = unchecked; dropdown = disabled
+AC-LOAD-10
+Listed Company checkbox is unchecked and company dropdown is disabled on load
+Visual inspection
+Listed Company checkbox = unchecked; dropdown = disabled
+AC-LOAD-11
+"Same as global date" checkbox is checked (default) and per-room date fields are disabled
+Visual inspection
+is_global_date = checked; per-room date fields disabled
+9.2 Reservation Linkage
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-RES-01
+Checking the Reservation checkbox enables the Reservation dropdown
+Manual test: check the checkbox
+Dropdown becomes enabled and shows reservation list
+AC-RES-02
+Selecting a reservation auto-populates dates, room type, and rate fields
+Manual test: select a reservation
+All available reservation fields auto-populate correctly
+AC-RES-03
+Unchecking Reservation checkbox disables and resets the Reservation dropdown
+Manual test: uncheck after selecting a reservation
+Dropdown disabled; selection cleared
+9.3 Corporate / Listed Company
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-LC-01
+Checking Listed Company checkbox enables the company dropdown and related fields
+Manual test: check Listed Company
+Company dropdown enabled; Contact Person, Mobile, Payment Mode, Pay For become available
+AC-LC-02
+Selecting a company makes Contact Person, Mobile Number, Payment Mode, and Pay For fields functional
+Manual test: select a company
+Fields are enabled and accept input
+AC-LC-03
+Payment Mode options are: Self | Company | Before C/O (Company/Host)
+Manual inspection of dropdown
+All three options are present
+AC-LC-04
+Pay For options include all 5 scope options
+Manual inspection
+Room Only, Room and Food, Room/Food/Laundry, Everything incl. hard drink/mini bar, Everything without — all present
+9.4 Room Detailed Information
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-RD-01
+Selecting a Room Type auto-fetches Rack Rate and charge fields
+Test: select a room type
+Rack Rate, SC, VAT, City Charge, Additional Charges populate within 1 second
+AC-RD-02
+Room List button opens the Room Selection modal with available rooms for the selected type
+Test: select room type, click Room List
+Modal opens; rooms displayed are available and of the selected type
+AC-RD-03
+Selecting a room in the modal and clicking OK auto-fills Room Number and closes modal
+Test: select room, click OK
+Room Number populated; modal closes
+AC-RD-04
+Clicking Cancel in Room List modal closes it without populating Room Number
+Test: open modal, click Cancel
+Modal closes; Room Number remains empty
+AC-RD-05
+Changing Discount Type to Percent re-evaluates Total Room Rent Amt correctly
+Test: enter Discount Amount, toggle type
+Total recalculates based on percentage logic
+AC-RD-06
+Unchecking Service Charge checkbox sets SC to 0 in total calculation
+Test: uncheck SC checkbox
+Total Room Rent Amt decreases by the SC value
+AC-RD-07
+Unchecking VAT checkbox sets VAT to 0 in total calculation
+Test: uncheck VAT checkbox
+Total Room Rent Amt decreases by the VAT value
+AC-RD-08
+Unchecking City Charge checkbox sets City Charge to 0 in total
+Test: uncheck City Charge
+Total decreases accordingly
+AC-RD-09
+Unchecking Additional Charges checkbox sets Additional Charges to 0 in total
+Test: uncheck Additional Charges
+Total decreases accordingly
+AC-RD-10
+RRC modal opens when RRC button is clicked
+Test: click RRC
+Modal opens with all rate component fields
+AC-RD-11
+RRC "Apply Rate" back-calculates and populates main form fields
+Test: enter inclusive amount, click Apply Rate
+Main form Rack Rate and charges update to back-calculated values; modal closes
+AC-RD-12
+"Same as global date" unchecked enables per-room date and night fields
+Test: uncheck Same as global date
+Per-room Check-In Date and Number of Night become editable
+AC-RD-13
+Changing Number of Night recalculates per-room Departure Date
+Test: change Number of Night to 3
+Departure Date = per-room Check-In Date + 3 days
+AC-RD-14
+Checking No Post does not block add/check-in but suppresses folio posting
+Test: check No Post, complete check-in, verify folio
+Room registered; folio contains no posted line items for this room
+AC-RD-15
+Checking Complimentary marks the stay as complimentary
+Test: check Complimentary, verify DB record
+is_complimentary = 1 in the registration record
+AC-RD-16
+Checking House Use marks the room as house use
+Test: check House Use, verify DB record
+is_house_use = 1 in the registration record
+AC-RD-17
+Add button adds the configured room to the summary table
+Test: configure room, click Add
+Room row appears in summary table with correct data
+AC-RD-18
+Edit button in summary table repopulates the form for editing
+Test: add room, click Edit
+Room Detailed Information form repopulates with row data; Update button appears
+AC-RD-19
+Update button saves the edited room row back to the table
+Test: edit room, change rate, click Update
+Summary table row updated with new values; form resets
+AC-RD-20
+Cancel button (Room) clears the Room Detailed Information form
+Test: fill form, click Cancel
+All room fields reset to default; summary table unchanged
+9.5 Additional Service
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-AS-01
+All expected additional service options are present in the Service Name dropdown
+Visual inspection of dropdown
+All 23 services present: Additional Room Revenue, Airport Drop, Airport Pickup, Business Center, Cafe, Damage Charge, Extra Bed Charge, Extra Breakfast, Early Check-in Fee, Gym, Half Day Charge, Laundry, Minibar, Missing Charge, Miscellaneous, No Show Charge, Restaurant, Spa, Transport, Full Day Charge, Swimming Pool, Recreation, Driver Accommodation, Massage Chair
+AC-AS-02
+Service Add button adds service to summary table
+Test: select service, enter dates, click Add
+Service appears as additional service column in room summary table
+AC-AS-03
+Service Cancel button clears the Additional Service form
+Test: select service, click Cancel
+Form fields reset; no service added to table
+9.6 Booking Metadata
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-META-01
+Market Segment dropdown contains Dhaka Office and Cox's Office options
+Visual inspection
+Both options present
+AC-META-02
+Guest Source dropdown contains Web Site, Marketing, Other Source, Broker
+Visual inspection
+All 4 options present
+AC-META-03
+Meal Plan dropdown contains all 8 options
+Visual inspection
+BED ONLY, BED & BREAKFAST, HALF BOARD, FULL BOARD, BED/FOOD/LAUNDRY, Honeymoon Package, Day Long Package, Iftar — all present
+AC-META-04
+Reference dropdown is populated with all configured reference sources
+Visual inspection
+All configured sources present including portal names and staff names
+AC-META-05
+Hotel Remarks textarea accepts multi-line text input
+Manual test
+Textarea accepts and displays multi-line input
+AC-META-06
+POS Remarks textarea accepts multi-line text input
+Manual test
+Textarea accepts and displays multi-line input
+9.7 Check-In & Validation
+AC ID
+Acceptance Criterion
+Test Method
+Pass Condition
+AC-CI-01
+Clicking Check-In with no room in summary table blocks check-in
+Test: click Check-In with empty summary table
+Error displayed; check-in not completed
+AC-CI-02
+Missing required fields (Room Type, Room Number, Meal Plan, Reference) produce field-level errors
+Test: submit without required fields
+Per-field error messages displayed; no submission
+AC-CI-03
+Valid Check-In with all required data creates a registration record
+End-to-end test
+Registration record created in DB; room status = Occupied; user redirected or success message shown
+AC-CI-04
+All Registration Tab data is included in the Check-In payload (verified via API/DB)
+DB verification after check-in
+All entered fields stored correctly in room_registration and room_registration_detail tables
+AC-CI-05
+CSRF token is included in every form submission
+API test: inspect POST headers
+csrf_test_name present and validated server-side
+AC-CI-06
+Unauthenticated request to Registration Tab redirects to login
+Test: clear session, access URL
+Redirected to login page
+AC-CI-07
+Clicking Next navigates to Tab 2 without losing Registration Tab data
+Test: fill form, click Next, return
+All data preserved on return to Tab 1
+AC-CI-08
+Update Registration button (for existing records) saves changes without creating a new check-in
+Test: edit existing registration, click Update Registration
+Existing record updated; no duplicate check-in event created
