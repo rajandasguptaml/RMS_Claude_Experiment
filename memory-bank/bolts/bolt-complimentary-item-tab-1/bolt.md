@@ -3,24 +3,28 @@ id: bolt-complimentary-item-tab-1
 unit: 004-complimentary-item-tab
 intent: 001-room-registration
 type: simple-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 001-tile-grid-responsive-toggle
   - 002-select-all-and-mandatory-lock
   - 003-pre-selection-from-reservation
-created: 2026-04-20T07:25:00Z
-started: 2026-04-20T08:50:00Z
-completed: null
-current_stage: plan
-stages_completed: []
-
+created: 2026-04-20T07:25:00.000Z
+started: 2026-04-20T08:50:00.000Z
+completed: "2026-04-20T08:55:34Z"
+current_stage: null
+stages_completed:
+  - name: plan
+    completed: 2026-04-20T08:55:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-04-20T09:00:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts:
   - bolt-registration-tab-1
 enables_bolts:
   - bolt-shell-and-check-in-1
 requires_units: []
 blocks: true
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 2

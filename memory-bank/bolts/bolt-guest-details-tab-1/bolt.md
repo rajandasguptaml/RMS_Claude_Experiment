@@ -3,7 +3,7 @@ id: bolt-guest-details-tab-1
 unit: 003-guest-details-tab
 intent: 001-room-registration
 type: simple-construction-bolt
-status: planned
+status: in-progress
 stories:
   - 001-basic-info-and-full-name
   - 002-contact-info-and-validation
@@ -14,9 +14,9 @@ stories:
   - 007-guest-info-modal-with-history
   - 008-blocked-guest-warning-and-list-crud
 created: 2026-04-20T07:25:00Z
-started: null
+started: 2026-04-20T09:25:00Z
 completed: null
-current_stage: null
+current_stage: plan
 stages_completed: []
 
 requires_bolts:

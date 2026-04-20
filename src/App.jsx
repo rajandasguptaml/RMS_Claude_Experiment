@@ -3,7 +3,11 @@ import { Routes, Route, Link } from 'react-router-dom'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
-import { RegistrationTab } from './features/registration/index.js'
+import {
+  RegistrationTab,
+  ComplimentaryTab,
+  OthersInformationTab,
+} from './features/registration/index.js'
 import { BlankRegistrationCard } from './features/registration/pages/BlankRegistrationCard.jsx'
 import { RequireAuth } from './shared/auth/RequireAuth.jsx'
 import './App.css'
@@ -130,6 +134,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dev/registration-tab" element={<RegistrationTab />} />
+      <Route path="/dev/complimentary-tab" element={<ComplimentaryTab />} />
+      <Route path="/dev/others-information-tab" element={<OthersInformationTab />} />
       <Route
         path="/front-office/room-registration/blank-registration-card"
         element={

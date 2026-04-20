@@ -2,11 +2,11 @@
 id: 002-select-all-and-mandatory-lock
 unit: 004-complimentary-item-tab
 intent: 001-room-registration
-status: draft
+status: complete
 priority: must
-created: 2026-04-20T07:20:00Z
+created: 2026-04-20T07:20:00.000Z
 assigned_bolt: bolt-complimentary-item-tab-1
-implemented: false
+implemented: true
 ---
 
 # Story: 002-select-all-and-mandatory-lock

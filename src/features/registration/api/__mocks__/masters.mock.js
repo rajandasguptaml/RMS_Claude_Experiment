@@ -6,6 +6,10 @@ import { mealPlans } from '../../fixtures/mealPlans.js'
 import { marketSegments } from '../../fixtures/marketSegments.js'
 import { guestSources } from '../../fixtures/guestSources.js'
 import { services } from '../../fixtures/services.js'
+import { complimentaryItems } from '../../fixtures/complimentaryItems.js'
+import { airlines } from '../../fixtures/airlines.js'
+import { professions } from '../../fixtures/professions.js'
+import { countries } from '../../fixtures/countries.js'
 
 const delay = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -47,4 +51,24 @@ export async function fetchGuestSources() {
 export async function fetchServices() {
   await delay()
   return services
+}
+
+export async function fetchComplimentaryItems() {
+  await delay()
+  return complimentaryItems.filter((i) => i.is_active)
+}
+
+export async function fetchAirlines() {
+  await delay()
+  return airlines
+}
+
+export async function fetchProfessions() {
+  await delay()
+  return professions
+}
+
+export async function fetchCountries() {
+  await delay()
+  return countries
 }

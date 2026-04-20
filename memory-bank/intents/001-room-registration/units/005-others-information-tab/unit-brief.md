@@ -2,9 +2,9 @@
 unit: 005-others-information-tab
 intent: 001-room-registration
 phase: inception
-status: ready
-created: 2026-04-20T07:15:00Z
-updated: 2026-04-20T07:15:00Z
+status: complete
+created: 2026-04-20T07:15:00.000Z
+updated: 2026-04-20T07:15:00.000Z
 ---
 
 # Unit Brief: Others Information Tab

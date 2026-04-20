@@ -43,11 +43,56 @@ const initialClassification = () => ({
   channelDiscovery: [],
 })
 
+const initialComplimentary = () => ({
+  selected: [],
+  mandatoryIds: [],
+  initialized: false,
+  sourceReservationId: null,
+})
+
+const initialOthersSectionA = () => ({
+  comingFrom: '',
+  nextDestination: '',
+  visitPurpose: '',
+  complimentaryGuest: '',
+  houseUse: '',
+  roomOwner: '',
+  isPreviouslyVisited: false,
+  isVip: false,
+  channelDiscovery: [],
+})
+
+const initialOthersSectionB = () => ({
+  airportDrop: '',
+  airlineId: '',
+  flightNumber: '',
+  etd: '',
+})
+
+// PCI: cardGuarantee shape holds ONLY tokenized values. No `pan` field exists.
+const initialCardGuarantee = () => ({
+  cardType: '',
+  cardHolderName: '',
+  expiryMonth: '',
+  expiryYear: '',
+  cardReference: '',
+  token: '',
+  last4: '',
+})
+
+const initialOthersInformation = () => ({
+  sectionA: initialOthersSectionA(),
+  sectionB: initialOthersSectionB(),
+  cardGuarantee: initialCardGuarantee(),
+})
+
 const initialRegistration = () => ({
   header: initialHeader(),
   rooms: [],
   services: [],
   classification: initialClassification(),
+  complimentary: initialComplimentary(),
+  othersInformation: initialOthersInformation(),
 })
 
 export const useWizardDraft = create((set, get) => ({
@@ -146,6 +191,144 @@ export const useWizardDraft = create((set, get) => ({
       },
     })),
 
+  toggleComplimentary: (id) =>
+    set((state) => {
+      const comp = state.registration.complimentary
+      if (comp.mandatoryIds.includes(id)) return state // BR-CI-002: mandatory cannot be toggled
+      const selected = comp.selected.includes(id)
+        ? comp.selected.filter((x) => x !== id)
+        : [...comp.selected, id]
+      return {
+        registration: {
+          ...state.registration,
+          complimentary: { ...comp, selected },
+        },
+      }
+    }),
+
+  selectAllComplimentary: (allActiveIds) =>
+    set((state) => {
+      const comp = state.registration.complimentary
+      // All non-mandatory active IDs + preserved mandatory IDs
+      const nonMandatoryActive = allActiveIds.filter((id) => !comp.mandatoryIds.includes(id))
+      const alreadyAllSelected = nonMandatoryActive.every((id) => comp.selected.includes(id))
+      const nextNonMandatory = alreadyAllSelected ? [] : nonMandatoryActive
+      const selected = [...new Set([...comp.mandatoryIds, ...nextNonMandatory])]
+      return {
+        registration: {
+          ...state.registration,
+          complimentary: { ...comp, selected },
+        },
+      }
+    }),
+
+  clearComplimentary: () =>
+    set((state) => ({
+      registration: {
+        ...state.registration,
+        complimentary: {
+          ...state.registration.complimentary,
+          selected: [...state.registration.complimentary.mandatoryIds],
+        },
+      },
+    })),
+
+  applyReservationComplimentary: ({ reservationId, suggestedIds = [], mandatoryIds = [] }) =>
+    set((state) => ({
+      registration: {
+        ...state.registration,
+        complimentary: {
+          selected: [...new Set([...mandatoryIds, ...suggestedIds])],
+          mandatoryIds,
+          initialized: true,
+          sourceReservationId: reservationId,
+        },
+      },
+    })),
+
+  resetComplimentaryForWalkIn: () =>
+    set((state) => ({
+      registration: {
+        ...state.registration,
+        complimentary: initialComplimentary(),
+      },
+    })),
+
+  setOthersSectionA: (patch) =>
+    set((state) => {
+      const next = { ...state.registration.othersInformation.sectionA, ...patch }
+      // BR-OI-001: mutual exclusivity across Complimentary Guest / House Use / Room Owner.
+      const flipped = ['complimentaryGuest', 'houseUse', 'roomOwner'].find(
+        (k) => patch[k] === 'YES'
+      )
+      if (flipped) {
+        for (const other of ['complimentaryGuest', 'houseUse', 'roomOwner']) {
+          if (other !== flipped) next[other] = ''
+        }
+      }
+      return {
+        registration: {
+          ...state.registration,
+          othersInformation: {
+            ...state.registration.othersInformation,
+            sectionA: next,
+          },
+        },
+      }
+    }),
+
+  setOthersSectionB: (patch) =>
+    set((state) => ({
+      registration: {
+        ...state.registration,
+        othersInformation: {
+          ...state.registration.othersInformation,
+          sectionB: { ...state.registration.othersInformation.sectionB, ...patch },
+        },
+      },
+    })),
+
+  // PCI: accepts only tokenized + display fields. Any caller attempting to pass a `pan`
+  // or `cvv` key will have those keys stripped — belt-and-braces; the schema and
+  // components should never supply one.
+  setCardGuaranteeTokenized: (patch) =>
+    set((state) => {
+      const safe = { ...(patch || {}) }
+      delete safe.pan
+      delete safe.cvv
+      return {
+        registration: {
+          ...state.registration,
+          othersInformation: {
+            ...state.registration.othersInformation,
+            cardGuarantee: {
+              ...state.registration.othersInformation.cardGuarantee,
+              ...safe,
+            },
+          },
+        },
+      }
+    }),
+
+  clearCardGuarantee: () =>
+    set((state) => ({
+      registration: {
+        ...state.registration,
+        othersInformation: {
+          ...state.registration.othersInformation,
+          cardGuarantee: initialCardGuarantee(),
+        },
+      },
+    })),
+
+  resetOthersInformation: () =>
+    set((state) => ({
+      registration: {
+        ...state.registration,
+        othersInformation: initialOthersInformation(),
+      },
+    })),
+
   setLock: (roomId, token) =>
     set((state) => ({ roomLocks: { ...state.roomLocks, [roomId]: token } })),
 
@@ -163,4 +346,6 @@ export const useWizardDraft = create((set, get) => ({
   getRooms: () => get().registration.rooms,
   getServices: () => get().registration.services,
   getClassification: () => get().registration.classification,
+  getComplimentary: () => get().registration.complimentary,
+  getOthersInformation: () => get().registration.othersInformation,
 }))

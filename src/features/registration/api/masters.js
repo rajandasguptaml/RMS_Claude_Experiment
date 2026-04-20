@@ -9,7 +9,13 @@ import {
   fetchMarketSegments,
   fetchGuestSources,
   fetchServices,
+  fetchComplimentaryItems,
+  fetchAirlines,
+  fetchProfessions,
+  fetchCountries,
 } from './__mocks__/masters.mock.js'
+
+export { fetchProfessions, fetchCountries }
 
 const longStaleOpts = {
   staleTime: 30 * 60 * 1000, // 30 min
@@ -90,6 +96,42 @@ export function useServiceMaster() {
   return useQuery({
     queryKey: ['master', 'services'],
     queryFn: mocks ? fetchServices : notImplemented('services'),
+    ...longStaleOpts,
+  })
+}
+
+export function useComplimentaryMaster() {
+  const mocks = useMocks()
+  return useQuery({
+    queryKey: ['master', 'complimentary'],
+    queryFn: mocks ? fetchComplimentaryItems : notImplemented('complimentary'),
+    ...longStaleOpts,
+  })
+}
+
+export function useAirlineMaster() {
+  const mocks = useMocks()
+  return useQuery({
+    queryKey: ['master', 'airlines'],
+    queryFn: mocks ? fetchAirlines : notImplemented('airlines'),
+    ...longStaleOpts,
+  })
+}
+
+export function useProfessionMaster() {
+  const mocks = useMocks()
+  return useQuery({
+    queryKey: ['master', 'professions'],
+    queryFn: mocks ? fetchProfessions : notImplemented('professions'),
+    ...longStaleOpts,
+  })
+}
+
+export function useCountryMaster() {
+  const mocks = useMocks()
+  return useQuery({
+    queryKey: ['master', 'countries'],
+    queryFn: mocks ? fetchCountries : notImplemented('countries'),
     ...longStaleOpts,
   })
 }

@@ -15,6 +15,9 @@ export const reservations = [
     roomTypeId: 'rt-deluxe',
     rackRate: 9500,
     currency: 'BDT',
+    // Backend owns Open Q #3: supplies which items are suggested vs mandatory per package.
+    suggested_item_ids: ['ci-04', 'ci-06', 'ci-14'],
+    mandatory_item_ids: ['ci-14'],
   },
   {
     id: 'rsv-0002',
@@ -25,6 +28,8 @@ export const reservations = [
     roomTypeId: 'rt-super-deluxe',
     rackRate: 12000,
     currency: 'USD',
+    suggested_item_ids: ['ci-04', 'ci-11', 'ci-14', 'ci-15'],
+    mandatory_item_ids: ['ci-14', 'ci-15'],
   },
   {
     id: 'rsv-0003',
@@ -35,6 +40,8 @@ export const reservations = [
     roomTypeId: 'rt-executive-suite',
     rackRate: 20000,
     currency: 'BDT',
+    suggested_item_ids: ['ci-03', 'ci-04', 'ci-11', 'ci-12', 'ci-13', 'ci-14'],
+    mandatory_item_ids: ['ci-12', 'ci-14'],
   },
   {
     id: 'rsv-0004',
@@ -45,6 +52,8 @@ export const reservations = [
     roomTypeId: 'rt-signature-suite',
     rackRate: 25000,
     currency: 'EUR',
+    suggested_item_ids: ['ci-10', 'ci-11', 'ci-12', 'ci-13', 'ci-14', 'ci-15', 'ci-26'],
+    mandatory_item_ids: ['ci-10', 'ci-12', 'ci-14'],
   },
   {
     id: 'rsv-0005',
@@ -55,5 +64,7 @@ export const reservations = [
     roomTypeId: 'rt-business-king',
     rackRate: 15500,
     currency: 'BDT',
+    suggested_item_ids: ['ci-04', 'ci-14'],
+    mandatory_item_ids: [],
   },
 ]

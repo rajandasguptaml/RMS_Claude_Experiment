@@ -3,25 +3,29 @@ id: bolt-others-information-tab-1
 unit: 005-others-information-tab
 intent: 001-room-registration
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-section-a-classification-exclusivity
   - 002-section-b-departure-conditional
   - 003-section-c-card-form-with-masking
   - 004-pci-tokenization-call-integration
-created: 2026-04-20T07:25:00Z
-started: null
-completed: null
+created: 2026-04-20T07:25:00.000Z
+started: 2026-04-20T09:05:00.000Z
+completed: "2026-04-20T09:08:48Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2026-04-20T09:10:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-04-20T09:18:00.000Z
+    artifact: implementation-walkthrough.md
 requires_bolts:
   - bolt-registration-tab-1
 enables_bolts:
   - bolt-shell-and-check-in-1
 requires_units: []
 blocks: true
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 3
